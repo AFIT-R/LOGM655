@@ -7,7 +7,7 @@ Course Syllabus - Fall 2018
 </h3>
 <h3>
 
-MW 1200-1330 Bldg. 640 Rm. 228 (3.0 Credit Hours)
+MW 1200-1330 Bldg. 640 Rm. 326 (3.0 Credit Hours)
 
 </h3>
 
@@ -178,7 +178,7 @@ instructor.
 | **8**  | 11/19-11/23 |         Document summarization         |    Student Led    | Student Group |
 | **9**  | 11/26-11/30 |        Named entity recognition        |    Student Led    | Student Group |
 | **10** | 12/03-12/07 |         In class project work          |       None        |  Maj. Freels  |
-| **11** | 12/10-12/13 |     Student project presentations      |       None        | Student Group |
+| **11** | 12/10-12/13 |        Student project reports         |       None        | Student Group |
 
 ### Other Noteworthy Dates
 

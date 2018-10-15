@@ -294,3 +294,16 @@ docx1[90]
 ```
 
 Here we see that this function extracts the text as paragraphs, rather than as lines or pages.
+
+## Other Datasets
+
+There are many other sources of publicly available text data for use in training NLP models or to test out some of the basic NLP tasks.  A few sources of such data are listed below.  
+
+1. [**kaggle**](https://www.kaggle.com/datasets?sortBy=relevance&group=all&search=text)
+2. [**UCSD**](https://ucsd.libguides.com/data-statistics/textmining)
+3. [**QUANDL**](https://www.researchgate.net/deref/https%3A%2F%2Fwww.quandl.com%2F) 
+4. [**kdnuggets**](https://www.kdnuggets.com/datasets/index.html) 
+5. [**Amazon reviews**](https://snap.stanford.edu/data/web-Amazon.html) 
+6. [**ENRON emails**](https://www.cs.cmu.edu/~./enron/) 
+7. [**Hillary Clinton's declassified emails**](http://www.readhillarysemail.com)
+8. [**R package: Harry Potter**](https://github.com/bradleyboehmke/harrypotter)
