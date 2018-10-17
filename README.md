@@ -331,6 +331,16 @@ from 1 to 5, where a ‘5’ means that the student was very involved in the
 effort and made important contributions a ‘1’ means that a student was
 not involved and made few (if any) contributions.
 
+The group assignments are as shown in the table
+below
+
+| Parts of Speech Tagging | Named Entity Recognition | Topic Modeling | Document Summarization |
+| :---------------------: | :----------------------: | :------------: | :--------------------: |
+|         Walton          |        Beveridge         |     Kline      |        Speranza        |
+|          Hyder          |           Kane           |   Westerman    |        Kilgore         |
+|           NA            |          Kolano          |   St. Peter    |          Buck          |
+|           NA            |            NA            |       NA       |          Gold          |
+
 ## Final project
 
 This course requires completion of an <u>individual</u> project that

@@ -27,7 +27,8 @@ pacman::p_load(pdftools,     # extract content from PDF documents
                here,         # References for file paths
                countrycode,  # Working with names of countries
                tibble,       # Creating and manipulating tibbles
-               qdap)         # Tools for qualitative data
+               qdap,
+               stringr)         # Tools for qualitative data
 ```
 
 ## Regex Syntax
@@ -51,9 +52,9 @@ sub(pattern = "\\^", "carrot", "My daughter has a ^ with almost every meal!")
 gsub(pattern = "\\\\", " ", "I\\need\\space")
 ```
 
-### Matching Sequences of Characters Using Anchors
+### Matching Patterns Using Anchors
 
-To match a sequence of characters we can use a short-hand notation, called anchors, to capture specific sequences in specific locations within the document.  Anchors, like metacharacters, are regex tokens in that they don't match any characters, but specify something about the string or the matching process. Anchors can be used to specify that a pattern's position in the string matches a defined location (i.e. the beginning of the string or the end of a line. 
+To match a pattern of characters we can use a short-hand notation, called anchors, to capture specific sequences in specific locations within the document.  Anchors, like metacharacters, are regex tokens in that they don't match any characters, but specify something about the string or the matching process. Anchors can be used to specify that a pattern's position in the string matches a defined location (i.e. the beginning of the string or the end of a line. 
 
 Anchors are useful because they allow us to be expressive in specifying that we want to match digits at the end of a line, but not anywhere else. Anchors are also efficient as they tell the function to only search at given locations, rather than throughout the entire document. The image below displays the general syntax for using these anchor tokens in R.
 
@@ -61,7 +62,7 @@ Anchors are useful because they allow us to be expressive in specifying that we 
 <img src="images/anchor_sequence.png" alt="Anchor Sequences" vspace="25">
 </center>    
     
-The following are simple examples showing how to use anchor tokens to find and replace sequences. 
+The following are simple examples showing how to use anchor tokens withe the `gsub()` function to find and replace patterns of characters. 
 
 ```{r}
 # substitute any digit with an underscore
@@ -80,7 +81,6 @@ gsub(pattern = "\\w", "_", "I'm working in RStudio v.0.99.484")
 gsub(pattern = "\\W", "_", "I'm working in RStudio v.0.99.484")
 ```
 
-
 ### Character classes
 
 To match one of several characters in a specified set we can enclose the characters of concern with square brackets [ ].  In addition, to match any characters **not** in a specified character set we can include the caret ^ at the beginning of the set within the brackets.  The following displays the general syntax for common character classes but these can be altered easily as shown in the examples that follow:
@@ -89,7 +89,7 @@ To match one of several characters in a specified set we can enclose the charact
 <img src="images/character_class.png" alt="Character Classes" vspace="25">
 </center>
 
-The following examples show how to use the anchor syntax to match character classes.  For information on the `grep` function used in this example visit the main regex functions section.
+The following examples show how to use the character class syntax with the `grep()` function to match character classes.  For information on the `grep()` function used in this example visit the main regex functions section.
 
 ```{r}
 x <- c("RStudio", "v.0.99.484", "2015", "09-22-2015", "grep vs. grepl")
@@ -107,6 +107,91 @@ grep(pattern = "[Rr]", x, value = TRUE)
 grep(pattern = "[^0-9a-zA-Z]", x, value = TRUE)
 ```
 
+### Quantifiers
+
+When we want to match a **certain number** of characters that meet a certain criteria we can apply quantifiers to our pattern searches.  The quantifiers we can use are:
+
+<center>
+<img src="images/quantifier.png" alt="Quantifiers in R" vspace="25">
+</center>     
+
+The following examples show how to use the quantifier syntax to match a **certain number** of characters patterns. For information on the `grep` function used in this example visit the [main regex functions section](#regex_functions_base).  Note that `state.name` is a dataset containing the names of every U.S. state and comes built-in with R.
+
+```{r}
+# State names: contain the letter z 
+grep(pattern = "z+", state.name, value = TRUE)
+
+# State names: contain the letters ss
+grep(pattern = "s{2}", state.name, value = TRUE)
+
+# State names: contain the letters s or ss
+grep(pattern = "s{1,2}", state.name, value = TRUE)
+```
+
+The following examples show how to combine anchors and quantifiers together to match more specific patterns of characters.
+
+```{r}
+# States names: starts with M
+grep('^M', state.name, value = T)
+
+# States names: starts with N
+grep('^N', state.name, value = T)
+
+# States names: starts with M or N
+grep('(^M|^N)', state.name, value = T)
+
+# States names: ends with a
+grep('a$', state.name, value = T)
+
+# States names: starts with M & ends with a
+grep('^M\\S+a$', state.name, value = T)
+
+# States names: starts with M or N & ends with a
+grep('(^M|N)\\S+a$', state.name, value = T)
+
+# States names: has two words
+grep('\\s', state.name, value = T)
+
+# States names: has two words - last word ends with a
+grep('\\s\\S+a$', state.name, value = T)
+
+# States names: has two words - first word starts with N
+grep('^N\\S+\\s', state.name, value = T)
+
+# States names: two words - first word starts with M or N and last word ends with a
+grep('(^M|N)\\S+\\s\\S+a$', state.name, value = T)
+
+# States names: 
+#   - two words 
+#   - starts with M or N 
+#   - ends with a
+#   - last word begins with C
+grep('(^M|N)\\S+\\s+C\\S+a$', state.name, value = T)
+
+## States names: contain ss twice
+grep('s{2}\\S+s{2}', state.name, value = T)
+```
+
+Finally, regular expression anchors can be used to replace multiple patterns that are  variations of the same entity.  The code in the chunk below matches multiple variations of how the nation of North Korea may be referenced in a document and then replaces each of these patterns with a single pattern.
+
+```{r}
+nk_text <- c('North korea', 
+             'DPRK',
+             'dprk',
+             'D.P.R.K',
+             'd.p.r.k.',
+             'North Korea',
+             'NORTH KOREA',
+             'northkorea',
+             'north.korea',
+             'north_korea',
+             'nokia')
+
+gsub(pattern = '(^[Dd].?\\S+|^[Nn]\\S+[Hh]\\s*[._kK]\\S+[Aa]$)', 
+     replacement = 'DPRK',
+     nk_text)
+```
+
 ### POSIX character classes
 
 Closely related to regex character classes are POSIX character classes which are expressed in double brackets [[ ]].
@@ -115,7 +200,7 @@ Closely related to regex character classes are POSIX character classes which are
 <img src="images/posix.png" alt="POSIX Character Classes" vspace="25">
 </center>      
 
-The following examples show how to use the anchor syntax to match POSIX character classes. For information on the `grep` function used in this example visit the [main regex functions section](#regex_functions_base).
+The following examples show how to use the anchor syntax to match POSIX character classes. For information on the `grep` function used in this example visit the main regex functions section.
 
 ```{r}
 x <- "I like beer! #beer, @wheres_my_beer, I like R (v3.2.2) #rrrrrrr2015"
@@ -130,25 +215,30 @@ gsub(pattern = "[[:punct:]]", replacement = " ", x)
 gsub(pattern = "[[:alnum:]]", replacement = "", x)
 ```
 
-### Quantifiers
-
-When we want to match a **certain number** of characters that meet a certain criteria we can apply quantifiers to our pattern searches.  The quantifiers we can use are:
-
-<center>
-<img src="images/quantifier.png" alt="Quantifiers in R" vspace="25">
-</center>     
-
-The following examples show how to use the quantifier syntax to match a **certain number** of characters patterns. For information on the `grep` function used in this example visit the [main regex functions section](#regex_functions_base).  Note that `state.name` is a built in dataset within R that contains all the U.S. state names.
+The next set of exampled show how to combine POSIX-class anchors together to to match more specific patterns of characters.
 
 ```{r}
-# match states that contain z 
-grep(pattern = "z+", state.name, value = TRUE)
+# States names: starts with M or N & ends with a
+grep('(^M|N)+[[:alpha:]]+a$', state.name, value = T)
 
-# match states with two s
-grep(pattern = "s{2}", state.name, value = TRUE)
+# States names: has two words
+grep('[[:space:]]', state.name, value = T)
 
-# match states with one or two s
-grep(pattern = "s{1,2}", state.name, value = TRUE)
+# States names: has two words - last word ends with a
+grep('[[:space:]]+[[:alpha:]]+a$', state.name, value = T)
+
+# States names: has two words - first word starts with N
+grep('^N+[[:alpha:]]+[[:space:]]', state.name, value = T)
+
+# States names: two words - first word starts with M or N and last word ends with a
+grep('(^M|N)+[[:alpha:]]+[[:space:]]+[[:alpha:]]+a$', state.name, value = T)
+
+# States names: 
+#   - two words 
+#   - starts with M or N 
+#   - ends with a
+#   - last word begins with C
+grep('(^M|N)+[[:alpha:]]+[[:space:]]+C+[[:alpha:]]+a$', state.name, value = T)
 ```
 
 ## Regex Functions in Base R
@@ -376,10 +466,11 @@ Which method we choose depends upon what we are trying to accomplish.  For docum
 ```{r}
 library(here)
 root <- here('raw_data_files','supreme_court_opinions_2017')
-files <- list.files(root, pattern = '17-965')
 
-trav_ban_pdf <- file.path(root,
-                          str_subset(files, pattern = '.pdf'))
+trav_ban_pdf <- list.files(root, 
+                           pattern = '17-965\\S+pdf$',
+                           full.names = T)
+
 
 trav_ban_pdf 
 ```
@@ -409,7 +500,7 @@ cat(tb_pdftools[1])
 
 Likewise, the code below can be used to extract the data using the `pdftotext` utility.
 
-```{r}
+```{r, cache=TRUE}
 cmd1 <- 'pdftotext' 
 cmd2 <- '-layout'   
 cmd3 <- trav_ban_pdf
@@ -419,8 +510,9 @@ CMD1 <- glue::glue("{cmd1} {cmd2} {cmd3} {cmd4}")
 
 system(CMD1)
 
-trav_ban_txt <- file.path(root,
-                          str_subset(files, pattern = '.txt'))
+trav_ban_txt <- list.files(root, 
+                           pattern = '17-965\\S+txt$',
+                           full.names = T)
 
 tb_pdftotext <- readLines(trav_ban_txt,
                           warn = F)
@@ -463,22 +555,6 @@ usc_doubles <- str_extract_all(string = tb_pdftools,
 ```
 
 Another set of character strings we may want locate are the named court cases, which are printed in *italics*. 
-
-```{r}
-pacman::p_load(XML,
-               rvest,
-               RCurl,
-               here)
-
-# Assign the root of the project this
-# helps locate where to save the files
-# Before going forward you should change 
-# these values to a location on your machine
-file_root <- here::here('raw_data_files', 'supreme_court_opinions_2017')
-
-# Assign the file URL to a text string
-pdf <- file.path(file_root, '17-965_h315.pdf')
-```
 
 ```{r, eval=FALSE}
 cmd1 <- 'pdftohtml' 

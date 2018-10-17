@@ -196,6 +196,24 @@ Students will cite all sources from which they obtained any examples or data use
 
 __This activity is worth 20% of your overall course grade.__ Student grades for this activity will be graded based on (1) completion of the assignment, and (2) the degree to which each student contributed to the team in completing this activity. I will assign this value based a survey each student will fill out to describe the level of participation for each member of the team.  The survey will be used to distribute the grade appropriately as demonstrated by your effort towards assisting the group accomplish the assignment.  Survey scores will be based on a scale from 1 to 5, where a '5' means that the student was very involved in the effort and made important contributions a '1' means that a student was not involved and made few (if any) contributions.
 
+The group assignments are as shown in the table below
+
+```{r echo=FALSE}
+POS <- c('Walton','Hyder',NA,NA)
+NER <- c('Beveridge', 'Kane', 'Kolano',NA)
+TM  <- c('Kline', 'Westerman','St. Peter',NA)
+DS  <- c('Speranza','Kilgore','Buck', 'Gold') 
+
+DAT <- data.frame(POS, NER, TM, DS)
+
+colnames(DAT) <- c('Parts of Speech Tagging',
+                   'Named Entity Recognition',
+                   'Topic Modeling',
+                   'Document Summarization')
+
+knitr::kable(DAT, row.names = NA, align = 'cccc')
+```
+
 ## Final project
 
 This course requires completion of an <u>individual</u> project that implements one or more of the the methods presented in the class.  The intent of the project is to apply one or multiple concepts learned within the class to an actual data set in order to perform knowledge discovery.  __The project must be approved by Maj Freels, NLT 19 October 2018.__  Students may use an application within their thesis project for work within this class.  The data set used for this project can be either pre-formatted text or something in textual form.  At a bare minimum, the text should include more than 5,000 words and should be in English.  While these requirements are minimums, the intent is that the problem is analyzed according to the concepts presented in this course and that the results are articulated in a clear manner. 
