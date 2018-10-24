@@ -559,7 +559,7 @@ Another set of character strings we may want locate are the named court cases, w
 ```{r, eval=FALSE}
 cmd1 <- 'pdftohtml' 
 cmd2 <- '-s -i -q -xml'  
-cmd3 <- pdf
+cmd3 <- trav_ban_pdf
 
 # Two options to connect the strings
 CMD1 <- glue::glue("{cmd1} {cmd2} {cmd3}")
