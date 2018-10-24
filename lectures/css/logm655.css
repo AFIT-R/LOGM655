@@ -51,16 +51,17 @@ code {
   font-weight: normal;
   padding: .1em .3em .1em .3em;
   border-radius: .3em;
+    background-color: #e6e6e6;
 }
 
 p code {
-  font-size: .8em;
-  font-family: 'Source Code Pro', 'Courier New', monospace;
   color: red;
-  font-weight: normal;
-  background-color: #e6e6e6;
-  padding: .1em .3em .1em .3em;
-  border-radius: .3em;
+  white-space: nowrap;
+  vertical-align: 10%;
+}
+
+li code {
+  color: red;
   white-space: nowrap;
   vertical-align: 10%;
 }
