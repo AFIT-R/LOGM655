@@ -11,35 +11,11 @@ output:
     toc_float: yes
 ---
 
-```{r setup, include=!FALSE,echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
-knitr::opts_chunk$set(echo = !TRUE,
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
                       message = F,
                       warning = F,
                       fig.align = 'center')
-
-if (!require("pacman")) install.packages("pacman")
-
-pacman::p_load(tm, 
-               pdftools, 
-               here,
-               stringi, 
-               tau,
-               tidyverse,
-               stringr,
-               tidytext, 
-               RColorBrewer,
-               qdap,
-               qdapRegex,
-               qdapDictionaries,
-               qdapTools,
-               data.table,
-               coreNLP,
-               scales)
-
-pacman::p_load_gh("dgrtwo/drlib",
-    "trinker/termco", 
-    "trinker/coreNLPsetup",        
-    "trinker/tagger")
 ```
 
 # Overview
@@ -78,11 +54,24 @@ harrypotter::philosophers_stone[1]
 Additionally, we'll need to install and load the following packages to help with this analysis.
 
 ```{r, message=FALSE, warning = F}
-pacman::p_load(tidyverse, 
-               stringr,   
-               tidytext,  
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(tm, 
+               pdftools, 
+               here,
+               tau,
+               tidyverse,
+               stringr,
+               tidytext, 
+               RColorBrewer,
+               qdap,
+               qdapRegex,
+               qdapDictionaries,
+               qdapTools,
+               data.table,
+               coreNLP,
+               scales,
                harrypotter,
-               tm,
                text2vec,
                SnowballC,
                DT,
@@ -93,6 +82,11 @@ pacman::p_load(tidyverse,
                grid,
                knitr,
                widyr)
+
+pacman::p_load_gh("dgrtwo/drlib",
+    "trinker/termco", 
+    "trinker/coreNLPsetup",        
+    "trinker/tagger")
 ```
 
 ```{r child_tidy, child='text_mining_tidy.Rmd'}
