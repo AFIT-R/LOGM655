@@ -92,9 +92,9 @@ hp_tidy %>%
         dplyr::top_n(10)
 ```
 
-We can visualize this with
+We can visualize this with the `ggplot2` package
 
-```{r}
+```{r, fig.width=8, fig.height=16, fig.align='center'}
 # top 10 most common words in each book
 hp_tidy %>%
         anti_join(stop_words) %>%
@@ -136,7 +136,7 @@ frequency
 
 We can visualize this again with `ggplot2` as shown below
 
-```{r}
+```{r, fig.width=8, fig.height=16, fig.align='center'}
 ggplot(frequency, 
        aes(x = book_words, 
            y = all_words, 
