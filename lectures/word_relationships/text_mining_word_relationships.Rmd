@@ -1,35 +1,15 @@
 ## Text Mining&#58; Word Relationships
 
-So far we've analyzed the Harry Potter series by understanding the frequency and distribution of words across the corpus.  This can be useful in giving context of particular text along with understanding the general sentiment.  However, we often want to understand the relationship between words in a corpus.  What sequences of words are common across our text?  Given a sequence of words, what word is most likely to follow?  What words have the strongest relationship with each other?  These are questions that we will consider in this tutorial.
-
-### tl;dr
-
-This tutorial builds on the [tidy text](tidy_text), [sentiment analysis](sentiment_analysis), and [term vs. document frequency](tf-idf_analysis) tutorials so if you have not read through those tutorials I suggest you start there before proceeding.  In this tutorial I cover the following: 
+So far, we've analyzed the Harry Potter series by understanding the frequency and distribution of words across the corpus.  However, we often want to understand the relationship between words in a corpus.  What sequences of words are common across our text?  Given a sequence of words, what word is most likely to follow?  What words have the strongest relationship with each other?
 
 ### n-gram Analysis {#ngram}
 
-As we saw in the [tidy text](tidy_text), [sentiment analysis](sentiment_analysis), and [term vs. document frequency](tf-idf_analysis) tutorials we can use the `unnest` function from the `tidytext` package to break up our text by words, paragraphs, etc.  We can also use `unnest` to break up our text by "tokens", aka - a consecutive sequence of words.  These are commonly referred to as *n*-grams where a bi-gram is a pair of two consecutive words, a tri-gram is a group of three consecutive words, etc.  
+As we saw in the previous sections we can use the `unnest_tokens()` function from the `tidytext` package to break up our text by words, paragraphs, etc.  We can also use `unnest` to break up our text by "tokens", aka - a consecutive sequence of words.  These are commonly referred to as *n*-grams where a bi-gram is a pair of two consecutive words, a tri-gram is a group of three consecutive words, etc.  
 
 Here, we follow the same process to prepare our text as we have in the previous three tutorials; however, notice that in the `unnest` function I apply a `token` argument to state we want *n*-grams and the `n = 2` tells it we want bi-grams.
 
 ```{r}
-titles <- c("Philosopher's Stone", 
-            "Chamber of Secrets", 
-            "Prisoner of Azkaban",
-            "Goblet of Fire", 
-            "Order of the Phoenix", 
-            "Half-Blood Prince",
-            "Deathly Hallows")
-
-books <- list(philosophers_stone, 
-              chamber_of_secrets, 
-              prisoner_of_azkaban,
-              goblet_of_fire, 
-              order_of_the_phoenix, 
-              half_blood_prince,
-              deathly_hallows)
-  
-series <- tibble()
+hp_tidy_2 <- tibble()
 
 for(i in seq_along(titles)) {
         
@@ -39,13 +19,13 @@ for(i in seq_along(titles)) {
              mutate(book = titles[i]) %>%
              select(book, everything())
 
-        series <- rbind(series, clean)
+        hp_tidy_2 <- rbind(hp_tidy_2, clean)
 }
 
 # set factor to keep books in order of publication
-series$book <- factor(series$book, levels = rev(titles))
+hp_tidy_2$book <- factor(hp_tidy_2$book, levels = rev(titles))
 
-series
+hp_tidy_2
 ```
 
 Our output is similar to what we had in the previous tutorials; however, note that our bi-grams have groups of two words.  Also, note how there is some repetition, or overlapping.  The sentence "The boy who lived" is broken up into 3 bi-grams:
@@ -57,15 +37,14 @@ Our output is similar to what we had in the previous tutorials; however, note th
 This is done for the entire Harry Potter series and captures all the sequences of two consecutive words.  We can now perform common frequency analysis procedures.  First, let's look at the most common bi-grams across the entire Harry Potter series:
 
 ```{r,}
-series %>%
+hp_tidy_2 %>%
         count(bigram, sort = TRUE)
 ```
 
 With the exception of "said harry" the most common bi-grams include very common words that do not provide much context.  We can filter out these common *stop* words to find the most common bi-grams that provide context.  The results show pairs of words that are far more contextual than our previous set.
 
-
 ```{r}
-series %>%
+hp_tidy_2 %>%
         separate(bigram, c("word1", "word2"), sep = " ") %>%
         filter(!word1 %in% stop_words$word,
                !word2 %in% stop_words$word) %>%
@@ -75,7 +54,7 @@ series %>%
 Similar to the previous text mining tutorials we can visualize the top 10 bi-grams for each book. 
 
 ```{r, fig.height=12}
-series %>%
+hp_tidy_2 %>%
         separate(bigram, c("word1", "word2"), sep = " ") %>%
         filter(!word1 %in% stop_words$word,
                !word2 %in% stop_words$word) %>%
@@ -92,17 +71,15 @@ series %>%
         coord_flip()
 ```
 
-
 ### Analyzing n-grams {#analyze}
 
 We can also follow a similar process as performed in the [term vs. document frequency](tf-idf_analysis) tutorial to identify the tf-idf of *n*-grams (or bi-grams in our ongoing example).
 
 ```{r}
-(bigram_tf_idf <- series %>%
+(bigram_tf_idf <- hp_tidy_2 %>%
         count(book, bigram, sort = TRUE) %>%
         bind_tf_idf(bigram, book, n) %>%
-        arrange(desc(tf_idf))
-)
+        arrange(desc(tf_idf)))
 ```
 
 And we can visualize the bigrams with the highest tf_idf for each book:
@@ -122,75 +99,6 @@ bigram_tf_idf %>%
         coord_flip()
 ```
 
-The sentiment analysis approch used in the [sentiment analysis](sentiment_analysis) tutorial simply counted the appearance of positive or negative words, according to a specified lexicon (i.e. AFINN, bing, nrc). Unfortunately, this approach scores the sentiments of words merely on their presence rather than on context. For example, the words "happy" and "like" will be counted as positive, even in a sentence like "I'm not happy and I don’t like it!"   
-
-By performing sentiment analysis on our bi-gram data, we can examine how often sentiment-associated words are preceded by "not" or other negating words. 
-
-```{r}
-series %>%
-        separate(bigram, c("word1", "word2"), sep = " ") %>%
-        filter(word1 == "not") %>%
-        count(book, word1, word2, sort = TRUE)
-```
-
-We could use this to ignore or even reverse their contribution to the sentiment score.  Here we'll use the AFINN lexicon for the sentiment analysis, which gives a numeric sentiment score for each word. We can assess the most frequent words that have a sentiment score and were preceded by "not".
-
-```{r}
-AFINN <- get_sentiments("afinn")
-
-nots <- series %>%
-        separate(bigram, c("word1", "word2"), sep = " ") %>%
-        filter(word1 == "not") %>%
-        inner_join(AFINN, by = c(word2 = "word")) %>%
-        count(word2, score, sort = TRUE) 
-
-```
-
-We can use this information to see the total impact these cases had on misspecifying sentiment.  For example, above we saw that the top two words preceded by "not" was "want" and "help".  The sentiment score for "want" is +1; however, "want" was preceded by "not" 81 times which means the sentiment could easily have been overstated by $$81 \times 1 = 81$$ points. "help" on the otherhand has a sentiment score of +2 but was preceded by "not" 45 times which means the sentiment could have been overstated by $$45 \times 2 = 90$$ points for these instances. 
-
-```{r, fig.height=7}
-nots %>%
-        mutate(contribution = n * score) %>%
-        arrange(desc(abs(contribution))) %>%
-        head(20) %>%
-        ggplot(aes(reorder(word2, contribution), n * score, fill = n * score > 0)) +
-        geom_bar(stat = "identity", show.legend = FALSE) +
-        xlab("Words preceded by 'not'") +
-        ylab("Sentiment score * # of occurrances") +
-        coord_flip()
-```
-
-The bi-grams "not help", "not want", "not like" were the largest causes of misidentification, making the text seem much more positive than it is. We also see bi-grams such as "not bad", "not dead", and "not stupid" at the bottom of our chart suggesting these bi-grams made the text appear more negative than it is.
-
-We could expand this example and use a full list of words that signal negation (i.e. "not", "no", "never", "without"). This would allow us to find a larger pool of words that are preceded by negation and identify their impact on sentiment analysis.
-
-
-```{r}
-negation_words <- c("not", "no", "never", "without")
-
-negated <- series %>%
-                separate(bigram, c("word1", "word2"), sep = " ") %>%
-                filter(word1 %in% negation_words) %>%
-                inner_join(AFINN, by = c(word2 = "word")) %>%
-                count(word1, word2, score, sort = TRUE) %>%
-                ungroup()
-```
-
-```{r, fig.height=8}
-negated %>%
-        mutate(contribution = n * score) %>%
-        arrange(desc(abs(contribution))) %>%
-        group_by(word1) %>%
-        top_n(10, abs(contribution)) %>%
-        ggplot(aes(drlib::reorder_within(word2, contribution, word1), contribution, fill = contribution > 0)) +
-        geom_bar(stat = "identity", show.legend = FALSE) +
-        xlab("Words preceded by 'not'") +
-        ylab("Sentiment score * # of occurrances") +
-        drlib::scale_x_reordered() +
-        facet_wrap(~ word1, scales = "free") +
-        coord_flip()
-```
-
 ### Visualizing n-gram Networks {#visualize}
 
 So far we've been visualizing the top *n*-grams; however, this doesn't give us much insight into multiple relationships that exist among words.  To get a better understanding of the numerous relationships that can exist we can use a network graph.  First, we'll set up the network structure using the `igraph` package.  Here we'll only focus on context words and look at bi-grams that have at least 20 occurrences across the entire Harry Potter series.
@@ -198,7 +106,7 @@ So far we've been visualizing the top *n*-grams; however, this doesn't give us m
 ```{r}
 library(igraph)
 
-bigram_graph <- series %>%
+bigram_graph <- hp_tidy_2 %>%
         separate(bigram, c("word1", "word2"), sep = " ") %>%
         filter(!word1 %in% stop_words$word,
                !word2 %in% stop_words$word) %>%
@@ -227,7 +135,7 @@ Here we can see clusters of word networks most commonly used together.
 
 ### Word Correlation {#corr}
 
-In addition to understanding what words and sentiments occur within sections, chapters, and books, we may also want to understand which pairs of words co-appear within sections, chapters, and books.  Here we'll focus on the `philosophers_stone` book.
+In addition to understanding what words occur within sections, chapters, and books, we may also want to understand which pairs of words co-appear within sections, chapters, and books.  Here we'll focus on the `philosophers_stone` book.
 
 ```{r}
 ps_words <- tibble(chapter = seq_along(philosophers_stone),
