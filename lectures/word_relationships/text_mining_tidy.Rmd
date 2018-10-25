@@ -1,6 +1,10 @@
-## Using the `tidytext` package
+## Basic Text Mining and Visualization
+
+### Using the `tidytext` package
 
 In this section, we analyzing text using the __*tidy text*__ format: a table with one-token-per-document-per-row, such as is constructed by the `unnest_tokens` function. This allows us to efficiently pipe our analysis directly into the popular suite of 'tidyverse' tools such as to explore and visualize text data. Although we can do some simple regex analysis on this character vector, to properly analyze this text using `tidytext` we'll want to turn it into a `data.frame` or `tibble`.  To do this on the `philosophers_stone` novel we could perform the following:
+
+#### Tokenization
 
 ```{r}
 text_tb <- tibble::tibble(chapter = base::seq_along(philosophers_stone),
@@ -64,7 +68,7 @@ hp_tidy
 
 We now have a tidy tibble with every individual word by chapter and by book and can begin performing some simple analyses
 
-### Word Frequency with `tidytext`
+#### Word Frequency with `tidytext`
 
 The simplest word frequency analysis is assessing the most common words in text.  We can use `count` to assess the most common words across all the text in the Harry Potter series.
 
@@ -168,7 +172,7 @@ frequency %>%
 
 The high correlations, which are all statistically significant (p-values < 0.0001), suggests that the relationship between the word frequencies is highly similar across the entire Harry Potter series.
 
-### Using `tm`
+### Using the `tm` Package
 
 Text analysis requires working with a variety of tools, many of which have inputs and outputs that aren’t in a tidy form. This section borrows from Chapter 5 of [Text Mining with R](http://tidytextmining.com) to show how to convert between a tidy text data frame and sparse document-term matrices, as well as how to tidy a Corpus object containing document metadata.
 
@@ -187,8 +191,12 @@ hp_dtm <- tm::VectorSource(books) %>%
   tm::VCorpus() %>%
   tm::DocumentTermMatrix(control = base::list(removePunctuation = TRUE,
                                               removeNumbers = TRUE,
-                                              stopwords = TRUE,
-                                              tokenize = 'MC'))
+                                              stopwords = tidytext::stop_words[,2],
+                                              tokenize = 'MC',
+                                              weighting =
+                                         function(x)
+                                         weightTfIdf(x, normalize =
+                                                     !FALSE)))
 
 tm::inspect(hp_dtm)
 ```
@@ -203,8 +211,7 @@ utils::head(terms, 50)
 DTM objects cannot be used directly with tidy tools, just as tidy data frames cannot be used as input for most text mining packages. Thus, the `tidytext` package provides two functions that convert between the two formats. If we wanted to analyze this data with tidy tools, we would first need to turn it into a data frame with one-token-per-document-per-row. The `broom` package introduced the `tidy()` function, which takes a non-tidy object and turns it into a tidy data frame. The `tidytext` package implements this method for DocumentTermMatrix objects.
 
 ```{r}
-hp_tidy <- tidytext::tidy(hp_dtm)
-hp_tidy
+(hp_tidy_tm <- tidytext::tidy(hp_dtm))
 ```
 
 Notice that we now have a tidy three-column data frame, with variables *document*, *term*, and *count*.  This form is convenient for analysis with the `dplyr`, `tidytext` and `ggplot2` packages. Note also that the `tidytext` package contains several other methods for tidying objects of other classes as shown below.
@@ -221,27 +228,27 @@ Likewise, we can use the `cast` method, which provides three functions for conve
 ```{r}
 # cast tidy data to a DFM object 
 # for use with the quanteda package
-hp_tidy %>%
+hp_tidy_tm %>%
   cast_dfm(term, document, count)
 
 # cast tidy data to a DocumentTermMatrix 
 # object for use with the `tm` package
-hp_tidy %>%
+hp_tidy_tm %>%
   cast_dtm(term, document, count)
 
 # cast tidy data to a TermDocumentMatrix 
 # object for use with the `tm` package
-hp_tidy %>%
+hp_tidy_tm %>%
   cast_tdm(term, document, count)
 
 # cast tidy data to a sparse matrix
 # uses the Matrix package
-hp_tidy %>%
+hp_tidy_tm %>%
   cast_sparse(term, document, count) %>%
   dim
 ```
 
-### Using the `text2vec`
+### Using the `text2vec` Package
 
 ```{r}
 t2v_tokens = books   %>% 
@@ -251,5 +258,11 @@ t2v_tokens = books   %>%
 t2v_itoken = text2vec::itoken(t2v_tokens, 
                               progressbar = FALSE)
 
-(t2v_vocab = text2vec::create_vocabulary(t2v_itoken))
+(t2v_vocab = text2vec::create_vocabulary(t2v_itoken,
+                                         stopwords = tidytext::stop_words[[1]]))
+
+t2v_dtm = create_dtm(t2v_itoken, hash_vectorizer())
+model_tfidf = TfIdf$new()
+dtm_tfidf = model_tfidf$fit_transform(t2v_dtm)
 ```
+

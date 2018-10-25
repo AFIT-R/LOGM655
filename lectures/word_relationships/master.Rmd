@@ -15,7 +15,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE,
                       message = F,
                       warning = F,
-                      fig.align = 'center')
+                      fig.align = 'center',
+                      cache = T)
 ```
 
 # Overview
@@ -84,15 +85,15 @@ pacman::p_load(tm,
                widyr)
 
 pacman::p_load_gh("dgrtwo/drlib",
-    "trinker/termco", 
-    "trinker/coreNLPsetup",        
-    "trinker/tagger")
+                  "trinker/termco", 
+                  "trinker/coreNLPsetup",        
+                  "trinker/tagger")
 ```
 
 ```{r child_tidy, child='text_mining_tidy.Rmd'}
 ```
 
-```{r child_idf, child='text_mining_tf_idf.Rmd', eval=FALSE}
+```{r child_idf, child='text_mining_tf_idf.Rmd', eval=!FALSE}
 ```
 
 ```{r child_relate, child='text_mining_word_relationships.Rmd', eval=FALSE}
