@@ -106,7 +106,7 @@ One way to think about this process is that we are keeping the *t* most importan
 <img src="images/LSA.jpg" alt="LSA" vspace="25"> [(5)](https://medium.com/nanonets/topic-modeling-with-lsa-psla-lda-and-lda2vec-555ff65b0b05)
 </center>
 
-The U matrix is our document-topic matrix and V is the topic-term matrix. The columns correspond to each of our topics. So if *t* is two, we keep two columns of each. With these matrices, we can then apply cosine similarity or other measures.
+The U matrix is in the term space and the V matrix is in the document space. The columns correspond to each of our topics. So if *t* is two, we keep two columns of each. With these matrices, we can then apply cosine similarity or other measures.
 
 #### Example
 
@@ -133,7 +133,7 @@ mysvd <- svd(a)
 u %*% s %*% t(v)
 ```
 
-As discussed earlier, U is our document-topic matrix and V is our topic-term matrix. If we want to look at two topics, we keep the first two columns of U and V and the first two rows and columns of S.
+As discussed earlier, U is our term-topic matrix and V is our document-topic matrix. If we want to look at two topics, we keep the first two columns of U and V and the first two rows and columns of S.
 
 ```{r}
 (u <- u[,1:2])
@@ -189,7 +189,7 @@ The terms on the right side are the parameters of the PLSA model. While some are
 <img src="images/PLSA_LSA.jpg" alt="Connection between LSA and PLSA" vspace="25"> [(5)](https://medium.com/nanonets/topic-modeling-with-lsa-psla-lda-and-lda2vec-555ff65b0b05)
 </center>
 
-This connection makes clear that the only difference LSA and PLSA, as expected, is the inclusion of probabilistic concepts. The P(D|Z) term relates to U, the document-topic matrix and the P(W|Z) term relates to V, the topic-term matrix.
+This connection makes clear that the only difference LSA and PLSA, as expected, is the inclusion of probabilistic concepts. The P(D|Z) term relates to U and the P(W|Z) term relates to V.
 
 There are little to no openly available examples using PLSA. People interested in topic modeling seem to gravitate toward LSA or LDA. 
 
