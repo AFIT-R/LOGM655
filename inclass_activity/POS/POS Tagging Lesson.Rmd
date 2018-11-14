@@ -15,11 +15,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Dionysius Thrax of Alexandria (c.100 B.C.) wrote a grammatical sketch that summarized the linguistic knowledge of his day. 
 
-Also included are a description of eight parts-of-speech: noun, verb,parts-of-speech pronoun, preposition, adverb, conjunction, participle, and article. Although earlier scholars (including Aristotle) had their own lists of parts-of speech, it was Thrax’s set of eight that became the basis for practically all subsequent part-of-speech descriptions of most European languages for the next 2000 years. 
+Also included are a description of eight parts-of-speech: noun, verb, pronoun, preposition, adverb, conjunction, participle, and article. Although earlier scholars (including Aristotle) had their own lists of parts-of speech, it was Thrax’s set of eight that became the basis for practically all subsequent part-of-speech descriptions of most European languages for the next 2000 years. 
 
 Thrax's original eight have change since then, but not by much.
 
-Parts-of-speech (also known as **POS**) are useful because they reveal a lot about a word and its neighbors. Knowing whether a word is a noun or a verb tells us about likely neighboring words (nouns are preceded by determiners and adjectives, verbs by nouns) and syntactic structure word (nouns are generally part of noun phrases), making part-of-speech tagging a key aspect of parsing. Parts of speech are useful features for labeling named entities like people or organizations in information extraction. A word’s part-of-speech can even play a role in speech recognition or synthesis, e.g., the word content is pronounced CONtent when it is a noun and conTENT when it is an adjective.
+Parts-of-speech (also known as **POS**) are useful because they reveal a lot about a word and its neighbors. Knowing whether a word is a noun or a verb tells us about likely neighboring words (nouns are preceded by determiners and adjectives, verbs by nouns) and syntactic structure word (nouns are generally part of noun phrases), making part-of-speech tagging a key aspect of parsing. Parts of speech are useful features for labeling **named entities** like people or organizations in information extraction. A word’s part-of-speech can even play a role in speech recognition or synthesis, e.g., the word content is pronounced CONtent when it is a noun and conTENT when it is an adjective.
 
 # Word Classes
 
