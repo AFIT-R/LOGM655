@@ -32,6 +32,8 @@ pacman::p_load_gh(c(
     "trinker/coreNLPsetup",        
     "trinker/tagger"
 ))
+
+pacman::p_load(tidytext)
 ```
 
 Last, lets install/ load packages for RDRPOSTagger
@@ -53,8 +55,6 @@ Now lets load in some text to tag for parts of speech. Make sure they are format
 
 text <- "Rubik's Cube is a 3-D combination puzzle invented in 1974 by Hungarian sculptor and professor of architecture Ernő Rubik. Originally called the Magic Cube, the puzzle was licensed by Rubik to be sold by Ideal Toy Corp. in 1980 via businessman Tibor Laczi and Seven Towns founder Tom Kremer, and won the German Game of the Year special award for Best Puzzle that year. As of January 2009, 350 million cubes had been sold worldwide making it the world's top-selling puzzle game. It is widely considered to be the world's best-selling toy."
 
-text <- as.String(text)  # Ensure text is in string format 
-
 ```
 
 Now lets see how to tag these sentences with each package...
@@ -62,6 +62,11 @@ Now lets see how to tag these sentences with each package...
 # openNLP
 
 For information about the openNLP package go to: https://cran.r-project.org/web/packages/openNLP/openNLP.pdf
+
+openNLP prefers working with text in string format (at least from what we experienced.) Lets make sure our text is formatted correctly.
+```{r}
+text <- as.String(text)  # Ensure text is in string format 
+```
 
 First, we need to break up the text into sentences and words. Do this by calling a sentence and word token annotator through openNLP. Notice the methodologies being used in the sentence and word token annotator.
 ```{r}
@@ -115,7 +120,6 @@ sprintf("%s/%s",text[WordAndSent_AnnText],tags)
 
 ```
 
-
 # trinker\tagger
 
 ## Using openNLP
@@ -124,25 +128,30 @@ For information about this package go to: https://github.com/trinker/tagger
 
 This package is essentially a wrapper for openNLP and NLP which makes POS tagging *much* easier!! 
 
+openNLP prefers working with text in character format (at least from what we experienced.) Lets make sure our text is formatted correctly.
 ```{r}
-text <- as.character(text)
+text <- as.character(text)  # Ensure text is in string format 
+```
+
+Now lets tag the text with POS...
+```{r}
 text_w_POS <- tag_pos(text, engine = "openNLP")
 text_w_POS
 ```
 
-Much easier, isn't it. Lets figure out what is going on under the hood... 
-Also, notice how the final output is in a different form than openNLP.
-
-```{r}
-?tag_pos
-```
+Much easier, isn't it. To figure out what is going under the hood type *?tag_pos*. Also, do you notice how the final output is in a different form than openNLP?
 
 ## Using coreNLP
-```{r}
-#tag_pos(sent2, engine = "coreNLP")
 
+First make sure that you have **coreNLP** installed. T. Rinker makes this easy with the function *check_setup*: 
+```{r}
+#check_setup()
 ```
 
+If coreNLP is installed lets tag the text using the coreNLP engine instead of the openNLP engine
+```{r}
+#tag_pos(text, engine = "coreNLP")
+```
 
 
 # RDRPOSTagger
@@ -163,8 +172,106 @@ rdr_pos(unipostagger2, text)
 ```
 
 
+# Visualizing POS
 
+In this section lets answer two questions:
+
+(1) Is tagger with the openNLP engine the same as POS tagging with openNLP
+(2) How can we easily visualize POS tags
+
+Plots are always nice...
+
+Lets plot the POS tags from openNLP
+```{r}
+table(tags) 
 ```
 
 
+Lets plot the POS tags from tagger
+```{r}
+#text_w_POS %>%
+#  plot()
+```
+
+```{r}
+
+```
+
+# **CALM** Example from Yesterday
+
+Last class we had three sentences with the word **calm** that had a different POS tag for each instance. How well does each tagger do at recognizing the difference?
+
+First lets pull in the sentences...
+```{r}
+csent1 <- "The calm lasted for three days."
+csent2 <- "Calm words show quiet minds."
+csent3 <- "Calm your angry friend."
+
+sent1 <- as.String(csent1)
+sent2 <- as.String(csent2)
+sent3 <- as.String(csent3)
+
+```
+
+Next lets tag each sentence using openNLP, tagger, and RDRPOSTagger.
+```{r}
+openNLP_sent1 <- annotate(sent1,list(sent_token_annotator,word_token_annotator))
+openNLP_sent1 <- annotate(sent1,pos_tag_annotator, openNLP_sent1)
+openNLP_sent1 <- subset(openNLP_sent1,type=="word") 
+openNLP_sent1_tags <- sapply(openNLP_sent1$features,'[[',"POS")
+
+openNLP_sent2 <- annotate(sent2,list(sent_token_annotator,word_token_annotator))
+openNLP_sent2 <- annotate(sent2,pos_tag_annotator, openNLP_sent2)
+openNLP_sent2 <- subset(openNLP_sent2,type=="word") 
+openNLP_sent2_tags <- sapply(openNLP_sent2$features,'[[',"POS")
+
+openNLP_sent3 <- annotate(sent3,list(sent_token_annotator,word_token_annotator))
+openNLP_sent3 <- annotate(sent3,pos_tag_annotator, openNLP_sent3)
+openNLP_sent3 <- subset(openNLP_sent3,type=="word") 
+openNLP_sent3_tags <- sapply(openNLP_sent3$features,'[[',"POS")
+
+
+RDRtags_sent1 <- rdr_pos(unipostagger, csent1)
+RDRtags_sent2 <- rdr_pos(unipostagger, csent2)
+RDRtags_sent3 <- rdr_pos(unipostagger, csent3)
+
+tagger_openNLP_sent1 <- tag_pos(csent1, engine = "openNLP")
+tagger_openNLP_sent2 <- tag_pos(csent2, engine = "openNLP")
+tagger_openNLP_sent3 <- tag_pos(csent3, engine = "openNLP")
+
+#tagger_coreNLP_sent1 <- tag_pos(sent1, engine = "coreNLP")
+#tagger_coreNLP_sent2 <- tag_pos(sent2, engine = "coreNLP")
+#tagger_coreNLP_sent3 <- tag_pos(sent3, engine = "coreNLP")
+
+```
+
+Lets compare how they do...
+
+
+
+- Sentence 1:
+```{r}
+sprintf("%s/%s",sent1[openNLP_sent1],openNLP_sent1_tags)
+tagger_openNLP_sent1
+RDRtags_sent1
+#tagger_coreNLP_sent1
+```
+
+- Sentence 2:
+```{r}
+sprintf("%s/%s",sent2[openNLP_sent2],openNLP_sent2_tags)
+
+tagger_openNLP_sent2
+RDRtags_sent2
+#tagger_coreNLP_sent2
+```
+
+- Sentence 3:
+```{r}
+sprintf("%s/%s",sent3[openNLP_sent3],openNLP_sent3_tags)
+
+tagger_openNLP_sent3
+RDRtags_sent3
+#tagger_coreNLP_sent3
+```
 
