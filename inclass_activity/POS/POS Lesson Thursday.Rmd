@@ -15,6 +15,8 @@ This lesson we will work with 4 POS Taggers:
 - tagger by trinker
 - RDRPOSTagger by bnosac
 
+# Install & Load Necessary Packages
+
 First lets install/ load packages for openNLP
 ```{r}
 #if (!require("pacman")) install.packages("pacman")
@@ -49,15 +51,17 @@ pacman::p_load_gh("bnosac/RDRPOSTagger")
 Now lets load in some text to tag for parts of speech. Make sure they are formatted as strings.
 ```{r}
 
-sent1 <- "The calm lasted for three days."
-sent2 <- "Calm words show quiet minds."
-sent3 <- "Calm your angry friend."
+text <- "Rubik's Cube is a 3-D combination puzzle invented in 1974 by Hungarian sculptor and professor of architecture Ernő Rubik. Originally called the Magic Cube, the puzzle was licensed by Rubik to be sold by Ideal Toy Corp. in 1980 via businessman Tibor Laczi and Seven Towns founder Tom Kremer, and won the German Game of the Year special award for Best Puzzle that year. As of January 2009, 350 million cubes had been sold worldwide making it the world's top-selling puzzle game. It is widely considered to be the world's best-selling toy."
 
-sent1 <- as.String(sent1)  # Ensure text is in string format 
+text <- as.String(text)  # Ensure text is in string format 
 
 ```
 
-Now lets see how to tag these sentences with openNLP...
+Now lets see how to tag these sentences with each package...
+
+# openNLP
+
+For information about the openNLP package go to: https://cran.r-project.org/web/packages/openNLP/openNLP.pdf
 
 First, we need to break up the text into sentences and words. Do this by calling a sentence and word token annotator through openNLP. Notice the methodologies being used in the sentence and word token annotator.
 ```{r}
@@ -70,7 +74,7 @@ word_token_annotator
 
 Now lets format the text to identify all words and sentences. Notice how openNLP organizes the text input.
 ```{r}
-WordAndSent_AnnText <- annotate(sent1,list(sent_token_annotator,word_token_annotator))
+WordAndSent_AnnText <- annotate(text,list(sent_token_annotator,word_token_annotator))
 WordAndSent_AnnText
 ```
 
@@ -84,17 +88,83 @@ Another option for a POS annotator in **openNLP** uses a Perceptron Neural Net m
 
 Lets annotate the text with the Maxent method
 ```{r}
-WordAndSent_AnnText <- annotate(sent1,pos_tag_annotator, WordAndSent_AnnText)
+WordAndSent_AnnText <- annotate(text,pos_tag_annotator, WordAndSent_AnnText)
 WordAndSent_AnnText
 ```
 
-
-
-a3
-a3w <- subset(a3,type=="word")
-tags <- sapply(a3w$features,'[[',"POS")
-tags
-table(tags)
-sprintf("%s/%s",text[a3w],tags)
+Notice how each word has been labeled to a part of speech. However, it is not very useful in this format because we can't see what each word is. Let's fix that... First lets save only the words and drop the sentences.
+```{r}
+WordAndSent_AnnText <- subset(WordAndSent_AnnText,type=="word") 
+WordAndSent_AnnText
 ```
+
+Next lets identify all the tags that were used...
+```{r}
+tags <- sapply(WordAndSent_AnnText$features,'[[',"POS")
+tags
+```
+
+Perhaps we want to know the number of times each POS tag occurred.
+```{r}
+table(tags)
+```
+
+Finally, lets augment the text with the POS tags so we can see it all together. Notice the format of the output this produces.
+```{r}
+sprintf("%s/%s",text[WordAndSent_AnnText],tags)
+
+```
+
+
+# trinker\tagger
+
+## Using openNLP
+
+For information about this package go to: https://github.com/trinker/tagger
+
+This package is essentially a wrapper for openNLP and NLP which makes POS tagging *much* easier!! 
+
+```{r}
+text <- as.character(text)
+text_w_POS <- tag_pos(text, engine = "openNLP")
+text_w_POS
+```
+
+Much easier, isn't it. Lets figure out what is going on under the hood... 
+Also, notice how the final output is in a different form than openNLP.
+
+```{r}
+?tag_pos
+```
+
+## Using coreNLP
+```{r}
+#tag_pos(sent2, engine = "coreNLP")
+
+```
+
+
+
+# RDRPOSTagger
+
+First lets define the POS tagger model
+```{r}
+unipostagger <- rdr_model(language = "English", annotation = "POS")           #define model for RDRPOSTagger
+unipostagger2 <- rdr_model(language = "English", annotation = "UniversalPOS") #define model for RDRPOSTagger
+```
+
+Now that the POS tagger is defined lets tag our text
+```{r}
+rdr_pos(unipostagger, text)
+```
+
+```{r}
+rdr_pos(unipostagger2, text)
+```
+
+
+
+```
+
+
 
