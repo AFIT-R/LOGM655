@@ -181,9 +181,11 @@ English has many words of more or less unique function
 # PoS Tagging
 
 **What is it?**
+
 "Part-of-speech tagging is the process of assigning a part-of-speech marker to each word in an input text" (Jurafsky, 156). 
 
 **Why is it useful?**
+
 - Information Extraction/ Retrieval
 - Phrase Identification
 - Named Entity Recognition
@@ -193,22 +195,24 @@ English has many words of more or less unique function
 \vspace{14cm}
 
 **Why is it challenging?** 
+
 The challenge in POS-tagging is the ambiguity in words. "The goal of POS-tagging is to *resolve* the ambiguities, choosing the proper tag for the context" (Jurafsky, 156). Ambiguous words account for only 14-15% of the vocabulary, but since they are common words 55-67% of word tokens in running text are ambiguous (Jurafsky, 156). 
 
-Examples of ambiguous frequent words: *that*, *back*, *down*, *put*, and *set*\
+Examples of ambiguous frequent words: *that*, *back*, *down*, *put*, and *set*
 
--- The **calm** lasted for three days. (Noun)
--- **Calm** words show quiet minds (Adjective)
--- **Calm** your angry friend. (Verb)
+- The **calm** lasted for three days. (Noun)
+- **Calm** words show quiet minds (Adjective)
+- **Calm** your angry friend. (Verb)
 
 \vspace{14cm}
 
-**How are words disambiguated?**\
-- Probability; each part-of-speech tag isn't equally likely.\
+**How are words disambiguated?**
+
+- Probability; each part-of-speech tag isn't equally likely.
 - Set of rules;
 
-- Most Frequent Class Baseline: for each ambiguous word, choose the tag which is *most frequent* in the training corpus.\
-- Aside from the *baseline* we will discuss 4 other methods for POS tagging: Hidden Markov Models, Maximum Entropy Markov Models, Conditional Random Fields, and Rule Based System.\ 
+- Most Frequent Class Baseline: for each ambiguous word, choose the tag which is *most frequent* in the training corpus.
+- Aside from the *baseline* we will discuss 4 other methods for POS tagging: Hidden Markov Models, Maximum Entropy Markov Models, Conditional Random Fields, and Rule Based System.
 
 \vspace{14cm}
 
@@ -218,7 +222,7 @@ Accuracy: measure of the performance of part-of-speech taggers (percentage of ta
 ## PoS Tagging Tools
 
 ### Part-of-Speech Tagset's
-A key component to tagging text for part-of-speech is the tagset used to label corpora. Several tagset's exist, however the **Penn Treebank** is most common and is sufficient for the purposes of this lesson. Standard notation is to place the tag after each word, deliminated by a slash.\ 
+A key component to tagging text for part-of-speech is the tagset used to label corpora. Several tagset's exist, however the **Penn Treebank** is most common and is sufficient for the purposes of this lesson. Standard notation is to place the tag after each word, deliminated by a slash.
 
 <center>
 
@@ -306,6 +310,7 @@ As the number of states grows very large, the vanilla Viterbi can be very slow. 
 One of the limitations of HMM is that it needs *massaging* to deal with unknown words, backoff, suffixes, and such. Maximum Entropy Markov Models (MEMM) deal with this issue by cleanly adding arbitrary features directly into the model.
 
 **How is this done?**
+
 - A logistic regression model
 - A logistic regression can be a discriminative sequence model by running it on successive words and allowing the previous output to be a feature for the current instance.
 
@@ -314,6 +319,12 @@ Lets see how this works...(Jurafsky, 168)
 
 
 - HMMs compute likelihood (observation word conditioned on tags) but MEMMs compute posterior (tags conditioned on observation words).
+
+<center>
+
+<img src="Images/HMMMath.PNG" alt="Coordinates" vspace="25">
+
+</center>
 
 <center>
 
@@ -330,12 +341,6 @@ Lets see how this works...(Jurafsky, 168)
 
 </center>
 
-<center>
-
-<img src="Images/hmm-memm-crf.jpg" alt="Coordinates" vspace="25">
-
-</center>
-
 
 # Example
-First lets install the necessary packages for this example.
+Thursday
