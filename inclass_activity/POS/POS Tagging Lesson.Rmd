@@ -27,7 +27,7 @@ Two categories: **Closed Class** and **Open Class**
 
 Closed-class words have relatively fixed membership. Words tend to be short, occur frequently, and often have structure uses in grammar (i.e. prepositions - new ones are rarely coined)
 
-Open-class words essentially have new words created often. For example, iPhone (noun), Googled (verb).
+Open-class words essentially have new words created often. For example, *iPhone* (noun), *Googled* (verb).
 
 Any given speaker or corpus could have a wide variety of open-class words, but will likely share the same set of closed-class words.
 
@@ -45,20 +45,20 @@ English has all 4, but some languages do not.
 #### 1. Nouns
 
 People, places, and things
-- Concrete (ship, actual concrete)
-- Abstractions (bandwidth, relationship)
-- Verb-like (Pacing)
+- Concrete (*ship*, *concrete*)
+- Abstractions (*bandwidth, relationship*)
+- Verb-like (*pacing*)
 
 Defining a noun in English
-- Appear with determiners (a ship, its bandwidth)
-- Take possessives (Google's annual revenue)
-- Some can occur in plural form (ships, relationships)
+- Appear with determiners (*a* ship, *its* bandwidth)
+- Take possessives (*Google's* annual revenue)
+- Some can occur in plural form (*ships, relationships*)
 
 Two classes of Open-Class nouns: 
 
 **Proper nouns**
 
-- Specific persons or entities (Regina, IBM, Colorado)
+- Specific persons or entities (*Regina, IBM, Colorado*)
 - In English, generally not preceded by articles (*the book is upstairs*, but *Regina is upstairs*)
 - Usually capitalized
 
@@ -66,22 +66,21 @@ Two classes of Open-Class nouns:
 
 Count nouns
 
-- Allow grammatical enumeration (boat/boats, relationship, relationships)
-- Can actually be counted (one ship, two ships)
+- Allow grammatical enumeration (*boat/boats, relationship, relationships*)
+- Can actually be counted (*one ship, two ships*)
 
 Mass nouns
 
-- Conceptualized as a homogenous group (snow, salt, communism)
-- Generally not counted (two communisms)
+- Conceptualized as a homogenous group (*snow, salt, communism*)
+- Generally not counted (*two communisms*)
 - Can appear without articles (*Snow is white*, but not *Goat is white*)
 
 #### 2. Verbs
 
-Refer to actions and processes (draw, provide, go)
+Refer to actions and processes (*draw*, *provide*, *go*)
 Have Inflections
 - Eat
 - Eating
-- Eaten
 - Eaten
 
 Some researchers believe all human languages have categories for nouns and verbs. Riau Indonesian and Tongan don't make a distinction.
@@ -89,9 +88,9 @@ Some researchers believe all human languages have categories for nouns and verbs
 #### 3. Adjectives
 
 Properties or qualities, description
-- Color (black, white)
-- Age (old, young)
-- Value (good, bad)
+- Color (*black*, *white*)
+- Age (*old*, *young*)
+- Value (*good*, *bad*)
 
 #### 4. Adverbs
 
@@ -103,24 +102,24 @@ Adverbs often modify verbs... hence the name. However, they can also modify othe
 
 Adverbs can be split into further categories
 
-- **Directional/locative** adverbs specify location (home, here, downhill) 
-- **Degree** adverbs specify extent (extremely, very, somewhat) 
-- **Manner** adverbs specify manner of some action (slowly, slinkily, delicately)
-- **Temporal** adverbs specify when an action or event took place (yesterday, Monday)
+- **Directional/locative** adverbs specify location (*home, here, downhill*) 
+- **Degree** adverbs specify extent (*extremely, very, somewhat*) 
+- **Manner** adverbs specify manner of some action (*slowly, slinkily, delicately*)
+- **Temporal** adverbs specify when an action or event took place (*yesterday, Monday*)
 
-Note: given the heterogeneous nature of this class, some adverbs (Monday) are tagged in some tagging schemes as nouns
+Note: given the heterogeneous nature of this class, some adverbs (*Monday*) are tagged in some tagging schemes as nouns
 
 ### Closed Class
 
 Includes
 
-- **Prepositions**: on, under, over, near, by, at, from, to, with 
-- **Particles**: up, down, on, off, in, out, at, by 
-- **Determiners**: a, an, the 
-- **Conjunctions**: and, but, or, as, if, when 
-- **Pronouns**: she, who, I, others 
-- **Auxiliary verbs**: can, may, should, are 
-- **Numerals**: one, two, three, ﬁrst, second, third
+- **Prepositions**: *on, under, over, near, by, at, from, to, with *
+- **Particles**: *up, down, on, off, in, out, at, by* 
+- **Determiners**: *a, an, the* 
+- **Conjunctions**: *and, but, or, as, if, when* 
+- **Pronouns**: *she, who, I, others* 
+- **Auxiliary verbs**: *can, may, should, are* 
+- **Numerals**: *one, two, three, ﬁrst, second, third*
 
 Prepositions occur before noun phrases, often to indicate temporal or spatial relation.
 
@@ -169,9 +168,10 @@ Auxiliary verbs mark semantic features of a main verb
 - Negation
 
 Copular verbs (part of auxiliary verbs) connect the subject with certain kinds of predicate nominals or adjectives
-- *George III* **is** *the King of England*
+- George III *is* the King of England
 
 English has many words of more or less unique function
+
 - Interjections: *oh, hey, alas, uh, um*
 - Politeness markers: *please, thank you*
 - Greetings: *hello, goodbye*
@@ -254,7 +254,7 @@ The tagged corpora were created by running an automatic part-of-speech tagger on
 
 The HMM is a **sequence model**. A sequence model or **sequence classifier** is a model that assigns a label or class to each unit in a sequence, mapping a sequence of observations (words) to a sequence of labels (tags). An HHM is a probabalistic model: given a sequence of words, it computes the probability distribution over possible sequences of labels and chooses the best.
 
-The HHM is based on modifying the Markov chain. Markov chains tell us something about the probabilities of sequences of random variables, *states*, each of which can take on values from some set. To predict the future, all we need to know is the current state. For example, to priduct tomorrow's weather, you could examine today's weather, but not yesterday's weather.
+The HHM is based on modifying the Markov chain. Markov chains tell us something about the probabilities of sequences of random variables, *states*, each of which can take on values from some set. To predict the future, all we need to know is the current state. For example, to predict tomorrow's weather, you could examine today's weather, but not yesterday's weather.
 
 <center>
 
