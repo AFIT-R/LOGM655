@@ -15,17 +15,13 @@ This lesson we will work with 4 POS Taggers:
 - tagger by trinker
 - RDRPOSTagger by bnosac
 
-
 First lets install/ load packages for openNLP
 ```{r}
-if (!require("pacman")) install.packages("pacman")
+#if (!require("pacman")) install.packages("pacman")
 
-pacman::p_load_gh(c("NLP",
-                    "openNLP"))
+pacman::p_load(NLP,openNLP)
 
 ```
-
-
 
 Next lets install/ load packages for tagger
 ```{r}
@@ -38,10 +34,67 @@ pacman::p_load_gh(c(
 
 Last, lets install/ load packages for RDRPOSTagger
 ```{r}
-devtools::install_github("bnosac/RDRPOSTagger")
-devtools::install_github("ropensci/tokenizers")
-library("RDRPOSTagger")
-library("tokenizers")
-library("koRpus")
+pacman::p_load(devtools)
+
+pacman::p_load_gh("bnosac/RDRPOSTagger")
+
+
+#devtools::install_github("bnosac/RDRPOSTagger")
+#devtools::install_github("ropensci/tokenizers")
+#library("RDRPOSTagger")
+#library("tokenizers")
+#library("koRpus")
+```
+
+Now lets load in some text to tag for parts of speech. Make sure they are formatted as strings.
+```{r}
+
+sent1 <- "The calm lasted for three days."
+sent2 <- "Calm words show quiet minds."
+sent3 <- "Calm your angry friend."
+
+sent1 <- as.String(sent1)  # Ensure text is in string format 
+
+```
+
+Now lets see how to tag these sentences with openNLP...
+
+First, we need to break up the text into sentences and words. Do this by calling a sentence and word token annotator through openNLP. Notice the methodologies being used in the sentence and word token annotator.
+```{r}
+sent_token_annotator <- Maxent_Sent_Token_Annotator()
+word_token_annotator <- Maxent_Word_Token_Annotator()
+
+sent_token_annotator
+word_token_annotator
+```
+
+Now lets format the text to identify all words and sentences. Notice how openNLP organizes the text input.
+```{r}
+WordAndSent_AnnText <- annotate(sent1,list(sent_token_annotator,word_token_annotator))
+WordAndSent_AnnText
+```
+
+Now that the text is formatted into words and sentences. Lets tag each word with its POS. First we must call a POS annotator. Notice the methodology that is being used.
+```{r}
+pos_tag_annotator <- Maxent_POS_Tag_Annotator()
+pos_tag_annotator
+```
+
+Another option for a POS annotator in **openNLP** uses a Perceptron Neural Net method. Check out the following link to find out more info. http://opennlp.sourceforge.net/models-1.5/
+
+Lets annotate the text with the Maxent method
+```{r}
+WordAndSent_AnnText <- annotate(sent1,pos_tag_annotator, WordAndSent_AnnText)
+WordAndSent_AnnText
+```
+
+
+
+a3
+a3w <- subset(a3,type=="word")
+tags <- sapply(a3w$features,'[[',"POS")
+tags
+table(tags)
+sprintf("%s/%s",text[a3w],tags)
 ```
 
