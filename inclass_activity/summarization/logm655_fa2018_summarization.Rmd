@@ -65,27 +65,57 @@ knitr::opts_chunk$set(echo = TRUE,
 *	Uses statistical and linguistic features to create summaries
 
 Tasks for extractive
+
 * Generic summarization
 * Query relevant summarization
 
 ###Graph Base:
   Model makes the graph from the document, then summarizes it by considering the relation between the nodes (text-unit). The graph is constructed by creating a vertex for each sentence in the document.
-
-<center>
+  
+  <center>
 <img src="Images/GraphBaseMath.png" alt="Approaches" vspace="25"> [(4)](https://github.com/icoxfog417/awesome-text-summarization#basic-approach)
 </center>
 
-#### *Method:* Text Rank
-  Based on PageRank algorithm used by Google Search Engine. The basic premise is a linked page has higher value if it is linked from many linked pages.
+  
+####Page Rank:
+<center>
+<img src="Images/page1.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page2.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page3.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page4.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page5.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page6.png" alt="Approaches" vspace="25"> 
+</center>
+<center>
+<img src="Images/page7.png" alt="Approaches" vspace="25"> 
+</center>
+
+The damping factor is included to prevent pages with no outgoing links from absorbing the Page Ranks of connected pages. The example we went over had a damping factor of 0. 
 
 <center>
 <img src="Images/TextRank.png" alt="Approaches" vspace="25"> [(4)](https://github.com/icoxfog417/awesome-text-summarization#basic-approach)
 </center>
 
-  TextRank considers words or sentences as “pages” on the PageRank.
+#### *Method:* Text Rank
+  Based on PageRank algorithm used by Google Search Engine. The basic premise is a linked page has higher value if it is linked from many linked pages.
+
+
+
+  TextRank considers *words* or sentences as “pages” on the PageRank and a similarity measure supplements the transition matrix. The measure is based on the number of words two sentences have in common and is normalized by the sentences' lengths.
+  
 
 #### *Method:* LexRank
-Uses cosine similarity of TF-IDF vectors
+  Uses cosine similarity of TF-IDF vectors
 
   First generates graph of all the sentences in the corpus. Each sentence represents a node and the edges are the similarity relationship between all sentences in the corpus. The following formulation is used to measure the similarity. 
 
@@ -108,6 +138,7 @@ Uses cosine similarity of TF-IDF vectors
   Model Extracts the features of a sentence, then evaluates its importance.
 
 Some examples of features are:
+
 *	Position of the sentence in input document
 *	Presence of the verb in the sentence
 *	Length of the sentence
@@ -125,12 +156,14 @@ The features are then combined as a score
 
 #### *Method:* Laten Sematic Analysis (LSA)
   LSA takes an input matrix and performs singular value decomposition (SVD) to identify patterns in the relationship and similarity between the terms and sentences. LSA summarization algorithms usually contain 3 main steps. 
+
 Step 1: Create the input matrix, which has each row represents the word and each column is a sentence. The cell value represents the importance of the word which can be filled using either frequency of word, TF-IDF, log entropy, etc.  
+
 Step 2: SVD breaks up the input matrix into three new matrices as follows:
 $$
-A = UΣV^T
+A = USV^T
 $$
-where A is the original *m* by *n* input matrix; U is words x extracted concepts; Σ represents scaling values, diagonal descending matrix; and V is sentences x extracted concepts. 
+where A is the original *m* by *n* input matrix; U is words x extracted concepts; S represents scaling values, diagonal descending matrix; and V is sentences x extracted concepts. 
 
 Step 3: Sentence selection by using the results of SVD. 
 
