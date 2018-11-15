@@ -198,7 +198,11 @@ English has many words of more or less unique function
 
 The challenge in POS-tagging is the ambiguity in words. "The goal of POS-tagging is to *resolve* the ambiguities, choosing the proper tag for the context" (Jurafsky, 156). Ambiguous words account for only 14-15% of the vocabulary, but since they are common words 55-67% of word tokens in running text are ambiguous (Jurafsky, 156). 
 
+<<<<<<< HEAD
+Examples of ambiguous frequent words: *that*, *back*, *down*, *put*, *set*, etc.
+=======
 Examples of ambiguous frequent words: *that*, *back*, *down*, *put*, and *set*
+>>>>>>> aa3a747a1cb7f31fca8b43f5b21474874bd5f9b0
 
 - The **calm** lasted for three days. (Noun)
 - **Calm** words show quiet minds (Adjective)
@@ -222,7 +226,8 @@ Accuracy: measure of the performance of part-of-speech taggers (percentage of ta
 ## PoS Tagging Tools
 
 ### Part-of-Speech Tagset's
-A key component to tagging text for part-of-speech is the tagset used to label corpora. Several tagset's exist, however the **Penn Treebank** is most common and is sufficient for the purposes of this lesson. Standard notation is to place the tag after each word, deliminated by a slash.
+
+A key component to tagging text for part-of-speech is the tagset used to label corpora. Several tagset's exist, however the **Penn Treebank** is most common and is sufficient for the purposes of this lesson. Standard notation is to place the tag after each word, deliminated by a slash.\ 
 
 <center>
 
@@ -342,5 +347,10 @@ Lets see how this works...(Jurafsky, 168)
 </center>
 
 
+<<<<<<< HEAD
+
+
+=======
 # Example
 Thursday
+>>>>>>> aa3a747a1cb7f31fca8b43f5b21474874bd5f9b0
