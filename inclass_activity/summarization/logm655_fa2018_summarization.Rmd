@@ -222,7 +222,9 @@ $$
 
 #### Problems with the RNN
   It may seem like its doing a pretty good job summarizing the document, however, two large problems present themselves:
+
 *Problem 1* - The summaries sometimes reproduces factual detail inaccuratly (such as the score of the soccer match) because these are rare words or words that do not appear in the voculary network.  
+
 *Problem 2* - The RNN can sometimes get caught in a loop repeating the same words or phase over and over again (e.g. Germany beat Germany beat Germany beat...) [(7)](http://www.abigailsee.com/2017/04/16/taming-rnns-for-better-summarization.html)
 
   If you want additional information as to how RNNs get around these problems, please see the online article where this information and diagram was collected [here.](http://www.abigailsee.com/2017/04/16/taming-rnns-for-better-summarization.html) This article does an execellent job explaining the basics of document summarization using Recurrent Neural Networks
