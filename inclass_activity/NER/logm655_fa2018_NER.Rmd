@@ -13,6 +13,14 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = F,
                       warning = F, 
                       comment = NA)
+
+y=5
+
+x=2 
+
+z <- x+y
+
+z
 ```
 
 Section 1
