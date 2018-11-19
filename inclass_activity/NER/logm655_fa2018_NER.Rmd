@@ -15,3 +15,6 @@ knitr::opts_chunk$set(echo = TRUE,
                       comment = NA)
 ```
 
+Section 1
+
+Named Entity Recognition
