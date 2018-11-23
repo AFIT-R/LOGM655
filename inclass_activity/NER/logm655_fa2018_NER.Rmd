@@ -17,4 +17,37 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 
-The goal of Named Entity Recognition is to detech the named entities in the text. Named entities are anything that that can be referred to with a proper noun: a person, a location, or an organization.  
+The goal of Named Entity Recognition is the process of finding spans of text that consititue a proper names and then classifying the type of entity. Named entities are anything that that can be referred to with a proper noun: a person, a location, or an organization.  They have also been extended to include dates, times, and numerical expressions. Named entities can give insites to events in text, relationship between people in a text, and aid in other text mining techniques. For example, we may want to conduct sentiment analysis towards a certain entity. The following table displays a list of genereic named enitity types with the kind of enitites they refer to. 
+
+<center>
+<img src="images/generic_entities.png" alt="Anchor Sequences" vspace="25">
+</center>
+
+There are challenges when trying to perform named entity recognition. It is difficult to segment the text correctly to identify what is and isn't an entity. It is also hard to identify the type of entity for a given word. For example, the entity JFK could be used for the airport, a person, or other schools, bridge, and street names. 
+
+###NER as Sequence Labeling
+
+A word-by-word sequence labeling task is the most common algorithm for performing named entity recognition. The assigned tags capture both the boundary and the entity type. There are two formats that entities can be tagged: IOB and IO tagging. IOB tagging introduces a tag for the beginning (B) and inside (I) of each entity type,
+and one for tokens outside (O). This results in _2n+1_ tags for _n_ enitites. IO tagging doesn't identify the B tags, and thus isn't able to distinguish between two entities of the same type right next to one another. This is more rare so typically IO tags are sufficient. IO tagging is simplier by only producing _n+1_ tags. Below we'll see a sentence broken down into IOB and IO tagged entities. 
+
+[ORG __American Airlines__], a unit of [ORG __AMR Corp.__], immediately matched the move, spokesman [PER __Tim Wagner__] said.
+
+This sentence is tagged and below are the associated IOB and IO labels broken down.
+
+<center>
+<img src="images/IOB_and_IO_Labeling.png" alt="Anchor Sequences" vspace="25">
+</center>
+
+
+
+###Feature-based NER
+
+###Neural Algorithm for NER
+
+###Rule-based NER
+
+###Evaluation Methods
+
+
+
+
