@@ -14,22 +14,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = F, 
                       comment = NA)
 
-y=5
-
-x=2 
-
-z <- x+y
-
-z
-
-KANE KANE KANE 
-
-COMMENT
 ```
 
-Section 1
 
-Named Entity Recognition
-
-KANE TEST COMMENT 
-
+The goal of Named Entity Recognition is to detech the named entities in the text. Named entities are anything that that can be referred to with a proper noun: a person, a location, or an organization.  
