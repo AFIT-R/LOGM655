@@ -66,9 +66,6 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
 
 
-test test test 
-
-
 ###Evaluation Methods
 
 NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio fo the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. 
