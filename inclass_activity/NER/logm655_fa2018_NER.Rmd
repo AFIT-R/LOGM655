@@ -41,9 +41,23 @@ The next sections all cover the standard algorithms for NER.
 
 ###Feature-based NER
 
-Feature-based NER extracts features and then trains either a Maximum Entropy Markov Models (MEMM) or Conditional Random Field (CRF) sequence model. Word shape plays an important role in a feautre based apporach. Word shape features are used to represent the letter pattern of a word by mapping lower-case letters to 'x', upper-case to 'X', numbers to 'd', and retaining punctuation. For example I.M.F would map to X.X.X and DC10-30 would map to XXdd-dd.
+Feature-based NER extracts features and then trains either a Maximum Entropy Markov Models (MEMM) or Conditional Random Field (CRF) sequence model. Recall from parts of speeching tagging, MEMM's compute the most likely sequence of tags by combining features of input word $w_i$, its neighbors within _l_ words and the previous _k_ tags (tags conditioned on observed words). Below shows a MEMM parts-of-speech tagger conditioned on previous features (tags) to develop left to right the sequence of tags for the sentence "Janet will back the bill".
 
-Recall that MEMM's compute the posterior $P(T|W)$ directly
+<center>
+<img src="images/MEMM_conditioned_on_features.png" alt="Anchor Sequences" vspace="25">
+<center>
+
+Feature based NER instead uses MEMMs to predict a certain entity based on features. The MEMM can condition on any useful feature of the input observation, so multiple features are first identified to feed the MEMM model. Entites are treated as unknown words to a MEMM or CRF model, so the features utilized and first identified consist of the word's spelling or shape. Here's a list of common word features used by the MEMM or CRF models used predicitng unknown words.
+
+<center>
+<img src="images/unknown_word_features.png" alt="Anchor Sequences" vspace="25">
+<center>
+
+Word shape plays a role in a feature based apporach. Word shape features are used to represent the letter pattern of a word by mapping lower-case letters to 'x', upper-case to 'X', numbers to 'd', and retaining punctuation. For example I.M.F would map to X.X.X and DC10-30 would map to XXdd-dd.
+
+CRF models are undirected graphical models, so it it’s not computing a probability for each entity at each time step. Instead, at each time step the CRF computes log-linear functions over a clique,
+a set of relevant features. The undirected nature of CRFs allows them to also use future output features to predict a current entity where as MEMM models only can look at current and previous features. 
+
 
 Lists are developed from both gazetteers and name-lists to improve the alrotithm. Gazetteers are lists of place names, often providing millions of entries for locations with geographical and political information. Name-lists consist of names, surnames, or corporations, commerical products, and other areas. Gazetteer and name features are implemented as a binary featur for each name list. These lists can difficult to create, maintain, and aren't always useful.  
 
