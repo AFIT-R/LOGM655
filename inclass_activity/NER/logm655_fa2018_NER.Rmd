@@ -66,6 +66,8 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
 
 
+test test test 
+
 
 ###Evaluation Methods
 
