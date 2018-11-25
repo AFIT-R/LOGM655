@@ -14,22 +14,25 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = F, 
                       comment = NA)
 
-y=5
 
-x=2 
-
-z <- x+y
-
-z
-
-KANE KANE KANE 
-
-COMMENT
 ```
 
-Section 1
 
-Named Entity Recognition
+# Introduction
 
-KANE TEST COMMENT 
+Named entity recognition is one fundamental aspect in an area of NLP called information extraction. Information extraction often 
+
+
+
+
+
+# NER Models
+
+Feature-based sequence labeling models such as Maximum Entropy Markov Models (MEMM's) and Conditional Random Fields (CRF's) are commonly used for the entity extraction task. Neural networks, in the form of bi-directional long-short term memory models are also used, as well as simple rule based algorithms. In addition to labeling entities such as location, organization, date/time, person, etc., these models assign boundary indicators to the entities called IOB tags. These tags indidicate whether a word is the beginning of an entity, inside the entity, or outside the entity. For example, consider the sentence "He lives in New York City." The words "New York City" would recieve the following tags respectively: [B-LOCATION], [I-LOCATION], [I-LOCATION].
+
+## Feature Based Models: MEMM's and CRF's
+
+
+
+
 
