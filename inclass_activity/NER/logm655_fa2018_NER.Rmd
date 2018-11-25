@@ -1,7 +1,7 @@
 ---
 title: "LOGM 655 In-Class activity"
 subtitle: "Named Entity Recognition"
-author: "Your name"
+author: "MAJ Bryan Kolano, 2d Lt Nate Beveridge, 2d Lt Zach Kane"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output: 
   html_document:
@@ -16,6 +16,21 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ```
 
+### Motivation
+
+
+Suppose we care about finding about people or objects which are mentioned in a particular section of text and how they relate to each other in the context of the text.  In the Harry Potter texts, we could attempt to gain insights about particular chapters or particular books when looking at which named entities are mentioned the most or when they are mentioned.  
+
+In Bryan's project, he is looking at the last 25 years worth of State of the Union Addresses to see what trends exist across presidents and parties.  In addition to document summarization to geneerate a condensed version of each speech, we could further analyze the text to see who and what each president mentions, how often, and in what context.   
+
+One further example:
+
+<center>
+<img src="Images/airlines.JPG" alt="Approaches" vspace="25"> 
+</center>
+
+
+The example shown above blends NER, event coreference (which event mentioned in a given text are the same event), temporal expressions (days of the weeks, months), entity linking (United Airlines vs. United).  While this lesson only delves into NER, this example shows some of the things that could be extracted to answer a question like: "Is there any relationship between one airline changing fare price followed by others doing to same thing?"
 
 The goal of Named Entity Recognition (NER) is the process of finding spans of text that consititue a proper names and then classifying the type of entity. Named entities are anything that that can be referred to with a proper noun: a person, a location, or an organization.  They have also been extended to include dates, times, and numerical expressions. Named entities can give insites to events in text, relationship between people in a text, and aid in other text mining techniques. For example, we may want to conduct sentiment analysis towards a certain entity. The following table displays a list of genereic named enitity types with the kind of enitites they refer to. 
 
@@ -23,7 +38,27 @@ The goal of Named Entity Recognition (NER) is the process of finding spans of te
 <img src="images/generic_entities.png" alt="Anchor Sequences" vspace="25">
 </center>
 
-There are challenges when trying to perform named entity recognition. It is difficult to segment the text correctly to identify what is and isn't an entity. It is also hard to identify the type of entity for a given word. For example, the entity JFK could be used for the airport, a person, or other schools, bridge, and street names. 
+There are challenges when trying to perform named entity recognition. It is difficult to segment the text correctly to identify what is and isn't an entity. It is also hard to identify the type of entity for a given word. For example, the entity JFK could be used for the airport, a person, or other schools, bridge, street names, or even a movie. 
+
+
+With the United Airlines example above, NER can break it down into the following entities based on their entity type.
+<center>
+<img src="images/tags.JPG" alt="Anchor Sequences" vspace="25">
+</center>
+
+## Uses of NER
+
+* Classifying content in online newspapers
+* Creating efficient search algorithms
+* Customer service for companies
+* Help to write research papers
+
+## NER as a filtering tool (like POS)
+NER can be used to filter out entities from documents and then further NLP tasks can be performed on the entities, such as:
+
+* Question answering
+* Text summarization
+* Sentiment analysis
 
 #NER as Sequence Labeling
 
@@ -70,11 +105,27 @@ A sequence classifier like an MEMM can be trained to label new sentences. In the
 
 ###Neural Algorithm for NER
 
+As CRF have to rely on gazetteers and lists, the are somewhat of a sub-prime solution as there are numerous flaws with these lists in terms of cost and inherent limitations.  NLP experts have begun to use recurrent neural networks to for NER because of their ability to handle sequential data. 
+
+The neural algorithm normally used for NER is a bi-directional Long Short Term Memory (bi-LSTM) which divide the text into two portions: one in which the data is no longer needed and one which keeps information that will likely be used later.  Of the words it keeps, it maps each of the words into their word embeddings (which are vectors of real numbers).
+
+The neural net them conducts the bi-directional LSTM layers which read each embedding and give an output after each hidden layer.  A dense layer then takes its weights and then maps to output of the bi-LSTM layers to a *n*-dimensional vector of logits and probabilities.  
+
+A graphical depiction of the bi-LSTM model is shown below:
+
+<center>
+<img src="images/NN.JPG" alt="Anchor Sequences" vspace="25">
+</center>
+
+
+
+The benefits of using a bi-direction neural net is that not only are words after the token of interest considered, but words before the token of interest are also considered, allows the model to uncover more patterns in the data.(4)  This makes the RNN much more accurate, with a much higher $F_1$ measure that a normal LSTM model.  
+
 ###Rule-based NER
 
 Machine learned (neural or MEMM/CRF) sequnce models are common in academic research, but for commerical use, NER is often based on pragnatic combinations of lists and rules. Rule-based NER will typically make repeated passes over text and uses previous results of one pass to influence the next. 
 
-1. Use high-precision rules to tag unambiguous entity metnions.
+1. Use high-precision rules to tag unambiguous entity mentions.
 2. Search for substring matches of the previosuly detected names.
 3. Consult application-specific name lists to identify likely name entity mentions from the given domain.
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
@@ -82,7 +133,19 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 
 ###Evaluation Methods
 
-NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio fo the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. 
+NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio for the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. 
+
+# COnclusions
+NER, must like part of speech, has many uses in and of itself but can also be used to filter documents and run further NLP task on.  
+
+
+
+#References
+1. Speech and Language Processing. Jurafsky, Daniel and Martin, James H. Draft Date: September 23, 2018.
+2. [Named Entity Recognition: Applications and Use Cases](https://dzone.com/articles/named-entity-recognition-applications-and-use-case)
+3. [Named Entity Recognition](https://www.kiv.zcu.cz/site/documents/verejne/vyzkum/publikace/technicke-zpravy/2012/tr-2012-04.pdf)
+4. [Deep Learning for Named Entity Recognition #2: Implementing the state-of-the-art Bidirectional LSTM + CNN model for CoNLL 2003](https://towardsdatascience.com/deep-learning-for-named-entity-recognition-2-implementing-the-state-of-the-art-bidirectional-lstm-4603491087f1)
+5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
 
 
 
