@@ -270,18 +270,18 @@ head(Part1_words)
   
 
 ```{r}
-#Part1_summary <- textrank_sentences(data = Part1_sen, 
-#                                   terminology = Part1_words)
-#Part1_summary
+Part1_summary <- textrank_sentences(data = Part1_sen, 
+                                  terminology = Part1_words)
+Part1_summary
 
-#Part1_summary[["sentences"]] %>%
- # ggplot(aes(textrank_id, textrank)) +
-  #geom_col() +
-  #theme_minimal() +
-  #labs(x = "Line",
-  #     y = "TextRank score",
-   #    title = "Script Line from the first quarter of Star Wars Episode 4") +
-#  scale_x_continuous(breaks = seq(from = 0, to = 55, by = 5))
+Part1_summary[["sentences"]] %>%
+  ggplot(aes(textrank_id, textrank)) +
+  geom_col() +
+  theme_minimal() +
+  labs(x = "Line",
+      y = "TextRank score",
+       title = "Script Line from the first quarter of Star Wars Episode 4") +
+  scale_x_continuous(breaks = seq(from = 0, to = 55, by = 5))
 
 ```
   As you can see, the textrank method and Lexrank method produced vastly different results for finding the most important lines in the Star Wars Episode 4 script.  While TextRank did an alright job in summarizing the the short article about fitbit, the algorithm struggled in summarizing the larger documents with the Jane Austen and Star Wars script.  
