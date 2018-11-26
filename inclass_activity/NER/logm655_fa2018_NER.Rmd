@@ -61,7 +61,7 @@ There are challenges when trying to perform named entity recognition. It is diff
 
 ##NER as Sequence Labeling
 
-A word-by-word sequence labeling task is the most common algorithm for performing NER. Sequence labeling is simply trying to assign a label to each element of a sequence chosen from a small fixed set of labels. The assigned tags capture both the boundary and the entity type. There are two formats that entities can be tagged: IOB and IO tagging. IOB tagging introduces a tag for the beginning (B) and inside (I) of each entity type, and one for tokens outside (O). This results in _2n+1_ tags for _n_ enitites. IO tagging doesn't identify the B tags, and thus isn't able to distinguish between two entities of the same type right next to one another. This is more rare so typically IO tags are sufficient. IO tagging is more simpler as it only produces _n+1_ tags. Below we'll see a sentence broken down into IOB and IO tagged entities. 
+A word-by-word sequence labeling task is the most common algorithm for performing NER. Sequence labeling is simply trying to assign a label to each element of a sequence chosen from a small fixed set of labels. The assigned tags capture both the boundary and the entity type. There are two formats that entities can be tagged: IOB and IO tagging. IOB tagging introduces a tag for the beginning (B) and inside (I) of each entity type, and one for tokens outside (O). This results in _2n+1_ tags for _n_ enitites. IO tagging doesn't identify the B tags, and thus isn't able to distinguish between two entities of the same type right next to one another. This is more rare so typically IO tags are sufficient. IO tagging is simpler as it only produces _n+1_ tags. Below we'll see a sentence broken down into IOB and IO tagged entities. 
 
 [ORG __American Airlines__], a unit of [ORG __AMR Corp.__], immediately matched the move, spokesman [PER __Tim Wagner__] said.
 
@@ -88,7 +88,8 @@ Prefixes and suffixes are also used as word features, as well as word embeddings
 
 <center>
 <img src="images/unknown_word_features.png" alt="Anchor Sequences" vspace="25">
-<center>
+</center>
+
 
 The first model that is commonly used for this task is the Maximum Entropy Markov Model (MEMM). Just as with POS tagging, MEMM's are preferred to HMM's due to the fact that they are discriminative as opposed to generative as well as the fact that it is far easier to incorporate the use of many features in predicting tags since they compute the posterior directly (intuition for this is found in Jurafsky pg. 168). Additionally, the MEMM model relaxes the assumption of tag independence present in HMM's. 
 
@@ -98,14 +99,13 @@ Very generally CRF's can be thought of as F:X-->Y, a function F takes a set of f
 
 Each of the feature based models use the same Viterbi algorithm to find the probability of the best tag sequence. A sequence classifier like an MEMM can be trained to label new sentences. In the below example, the operation of a sequence labeler is at the point where the token _Corp._ is next to be labeled. Everything in the boxed area is the features availible to the classifier.
 
+
 <center>
 <img src="images/Feature_based_classifier.png" alt="Anchor Sequences" vspace="25">
 </center>
 
 
 ##Neural Algorithm for NER
-
-
 
 As CRF have to rely on gazeteers and lists, this is a sub-prime solution as there are numerous flaws with these lists in terms of the costs of maintaining and updating the lists as well as lists not capturing every entity.  NLP experts have begun to use recurrent neural networks for NER because of their ability to handle sequential data. 
 
@@ -124,12 +124,22 @@ The benefits of using a bi-direction neural net is that not only are words after
 
 ##Rule-based NER
 
-Machine learned (neural or MEMM/CRF) sequnce models are common in academic research, but for commerical use, NER is often based on pragnatic combinations of lists and rules. Rule-based NER will typically make repeated passes over text and uses previous results of one pass to influence the next. 
+Machine learned (neural or MEMM/CRF) sequnce models are common in academic research, but for commerical use, NER is often based on pragnatic combinations of lists and rules. These lists or rules are either hand-coded or developed from examples. Typical rule-based systems consist of:
+
+* a collection of rules
+* a set of policies to control the firing of multiple rules
+
+The rules tend to have the form _Contextual Pattern_ -> _Action_. Take for example the line "at 3 pm will". A rule to define  
+
+
+Rule-based NER will typically make repeated passes over text and uses previous results of one pass to influence the next. 
 
 1. Use high-precision rules to tag unambiguous entity mentions.
 2. Search for substring matches of the previosuly detected names.
 3. Consult application-specific name lists to identify likely name entity mentions from the given domain.
-4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
+4. Apply probabilistic sequence labeling techniques that make use of the tags from previous stages as additional features.
+
+
 
 ##Evaluation Methods
 
