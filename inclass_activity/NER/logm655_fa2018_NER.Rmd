@@ -52,19 +52,7 @@ With the United Airlines example above, NER can break it down into the following
 <img src="images/tags.JPG" alt="Anchor Sequences" vspace="25">
 </center>
 
-## Uses of NER
 
-* Classifying content in online newspapers
-* Creating efficient search algorithms
-* Customer service for companies
-* Help to write research papers
-
-## NER as a filtering tool (like POS)
-NER can be used to filter out entities from documents and then further NLP tasks can be performed on the entities, such as:
-
-* Question answering
-* Text summarization
-* Sentiment analysis
 
 
 There are challenges when trying to perform named entity recognition. It is difficult to segment the text correctly to identify what is and isn't an entity. It is also hard to identify the type of entity for a given word. For example, the entity JFK could be used for the airport, a person, or other schools, bridge, street names, or even a movie. 
@@ -85,8 +73,7 @@ This sentence is tagged and below are the associated IOB and IO labels broken do
 
 The next sections all cover the standard algorithms for NER.
 
-<<<<<<< HEAD
-=======
+
 # Types of NER
 
 ##Feature-based NER
@@ -117,10 +104,8 @@ Each of the feature based models use the same Viterbi algorithm to find the prob
 
 
 ##Neural Algorithm for NER
-<<<<<<< HEAD
 
 
-=======
 
 As CRF have to rely on gazeteers and lists, this is a sub-prime solution as there are numerous flaws with these lists in terms of the costs of maintaining and updating the lists as well as lists not capturing every entity.  NLP experts have begun to use recurrent neural networks for NER because of their ability to handle sequential data. 
 
@@ -146,8 +131,6 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 3. Consult application-specific name lists to identify likely name entity mentions from the given domain.
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
 
-
-<<<<<<< HEAD
 ##Evaluation Methods
 
 NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio fo the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. These metrics all treat the entities are the response rather than the words.
@@ -161,15 +144,21 @@ There is mismatch between the training and test conditions that develops from us
 
 ##Applications of NER
 
+NER can be used to filter out entities from documents and then further NLP tasks can be performed on the entities, such as:
+
+* Question answering
+* Text summarization
+* Sentiment analysis
+
 Search engine algorithms can apply NER to shorten the lengthy querery of articles. NER can be applied to each article and entities saved to identify a given article. The key tags in the search query can then be compared with the tags associated with the website articles for a quick and efficient search. 
 
 Recommendations on websites can be developed using the NER to automatically filter relevant content a person might want to view. The entities associated with content in someone's history can be compared with labels assigned to other content to make recommendations.
 
-NER can aid a company's hiring process by simplifying resumes down to entities. A company's customer service complaints or feedback can be classified by their entities and directed to the proper departments.   [(6)](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
+NER can aid a company's hiring process by simplifying resumes down to entities. A company's customer service complaints or feedback can be classified by their entities and directed to the proper departments.   
 
 
 # Conclusions
-NER, much like part of speech, has many uses in and of itself but can also be used to filter documents and run further NLP task on.  Though NER can be very helpful to gain insight about a document or use it as a filter to perform other NLP tasks, it is certainly not without its faults.  Language complexities, different abbreviations, and entities having many different meanings will always make NER very difficult.  Advancement of neural networks and updated lists and gazateers will continue to make NER more accurate but it's important for analysts to remember these neural networks and other modelling techniques wont be perfect.    
+NER, much like parts of speech, has many uses in and of itself but can also be used to filter documents and run further NLP task on.  Though NER can be very helpful to gain insight about a document or use it as a filter to perform other NLP tasks, it is certainly not without its faults.  Language complexities, different abbreviations, and entities having many different meanings will always make NER very difficult.  Advancement of neural networks and updated lists and gazateers will continue to make NER more accurate but it's important for analysts to remember these neural networks and other modelling techniques wont be perfect.    
 
 </font>
 
@@ -179,6 +168,6 @@ NER, much like part of speech, has many uses in and of itself but can also be us
 3. [Named Entity Recognition](https://www.kiv.zcu.cz/site/documents/verejne/vyzkum/publikace/technicke-zpravy/2012/tr-2012-04.pdf)
 4. [Deep Learning for Named Entity Recognition #2: Implementing the state-of-the-art Bidirectional LSTM + CNN model for CoNLL 2003](https://towardsdatascience.com/deep-learning-for-named-entity-recognition-2-implementing-the-state-of-the-art-bidirectional-lstm-4603491087f1)
 5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
-
+6. [A Review of Named Entity Recognition (NER) Using Automatic Summarization of Resumes](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
 
 
