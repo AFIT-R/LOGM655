@@ -113,10 +113,14 @@ The neural algorithm normally used for NER is a bi-directional Long Short Term M
 
 The neural net then conducts the bi-directional LSTM layers which read each embedding and give an output after each hidden layer.  A dense layer then takes its weights and maps outputs of the bi-LSTM layers to a *n*-dimensional vector of logits and probabilities, thus identifying the entity, entity type, and non-NER tokens.  
 
-A graphical depiction of the bi-LSTM model is shown below:
+Two graphical depictions of the bi-LSTM model are shown below:
 
 <center>
 <img src="images/NN.JPG" alt="Anchor Sequences" vspace="25">
+</center>
+
+<center>
+<img src="images/LSTM.JPG" alt="Anchor Sequences" vspace="25">
 </center>
 
 
