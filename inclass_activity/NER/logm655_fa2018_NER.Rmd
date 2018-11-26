@@ -107,9 +107,9 @@ The first model that is commonly used for this task is the Maximum Entropy Marko
 
 Conditional Random Fields (CRF's) are the other commonly used feature based model; it is also discriminative and does not assume independence between tags. CRF's have a number of advantages over MEMM's; they are able to take into account future words/features, as well as address the label bias problem inherent in MEMM's. The label bias problem arises because transitions out of any one state to the next compete only against one another, making it so that there is a bias toward states with few transition arcs. Conditional random fields normalize transition probablities globally over entire sequence which eliminates the label bias problem. 
 
-Very generally CRF's can be thought of as F:X-->Y, a function F that maps a set of features X to the most probable tag sequence Y. The function does not act time step by step but rather acts over a window of tokens allowing it to utilize context.
+Very generally CRF's can be thought of as F:X-->Y, a function F takes a set of features X and assigns probabilites of membership to a various tag types Y. The function does not act time step by step but rather acts over a window of tokens allowing it to utilize context. 
 
-A sequence classifier like an MEMM can be trained to label new sentences. In the below example, the operation of a sequence labeler is at the point where the token _Corp._ is next to be labeled. Everything in the boxed area is the features availible to the classifier.
+Each of the feature based models use the same Viterbi algorithm to find the probability of the best tag sequence. A sequence classifier like an MEMM can be trained to label new sentences. In the below example, the operation of a sequence labeler is at the point where the token _Corp._ is next to be labeled. Everything in the boxed area is the features availible to the classifier.
 
 <center>
 <img src="images/Feature_based_classifier.png" alt="Anchor Sequences" vspace="25">
