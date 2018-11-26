@@ -19,7 +19,8 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Motivation
 
-<font size="4">
+
+<font size="5">
 Suppose we care to take a document and extract the people, organizations, or locations mentioned in a particular section of text and how they relate to each other in the context of the document.  In the Harry Potter texts, we could attempt to gain insight about particular chapters or particular books when looking at which named entities are mentioned the most, when they are mentioned, or what other entities (or particular parts of speech) are mentioned in close sequence.  
 
 In Bryan's project, he is looking at the last 25 years worth of State of the Union Addresses to see what trends exist across presidents and parties.  In addition to document summarization to generate a condensed version of each speech and topic modeling to "decode" the different common topics across the speeches, he could further analyze the text to see who and what each president mentions, how often, and in what context.  
@@ -175,6 +176,7 @@ NER can aid a company's hiring process by simplifying resumes down to entities. 
 NER, much like parts of speech, has many uses in and of itself but can also be used to filter documents and run further NLP task on.  Though NER can be very helpful to gain insight about a document or use it as a filter to perform other NLP tasks, it is certainly not without its faults.  Language complexities, different abbreviations, and entities having many different meanings will always make NER very difficult.  Advancement of neural networks and updated lists and gazateers will continue to make NER more accurate but it's important for analysts to remember these neural networks and other modelling techniques wont be perfect.    
 
 </font>
+
 
 #References
 1. Speech and Language Processing. Jurafsky, Daniel and Martin, James H. Draft Date: September 23, 2018.
