@@ -129,8 +129,7 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 * a collection of rules
 * a set of policies to control the firing of multiple rules
 
-The rules tend to have the form _Contextual Pattern_ -> _Action_. Take for example the line "at 3 pm will". A rule to define  
-
+Single-entry rules tend to have the form _Contextual Pattern_ -> _Action_. Take for example the line "at 3 pm will". A rule could be implemented to identify the entity "3 pm" as a standard time. The rule would first look for a pre word of "at", a fill of a positive digit and then a time id, and post part of speech auxiliary verb (AUX). 
 
 Rule-based NER will typically make repeated passes over text and uses previous results of one pass to influence the next. 
 
@@ -138,6 +137,9 @@ Rule-based NER will typically make repeated passes over text and uses previous r
 2. Search for substring matches of the previosuly detected names.
 3. Consult application-specific name lists to identify likely name entity mentions from the given domain.
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previous stages as additional features.
+
+These more in depth steps to rule based incorporate multipe entity rules and which rules should be applied over a larger span of text (longer entities). 
+
 
 
 
