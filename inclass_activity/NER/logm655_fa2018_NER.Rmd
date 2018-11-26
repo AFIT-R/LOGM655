@@ -192,5 +192,6 @@ NER, much like parts of speech, has many uses in and of itself but can also be u
 4. [Deep Learning for Named Entity Recognition #2: Implementing the state-of-the-art Bidirectional LSTM + CNN model for CoNLL 2003](https://towardsdatascience.com/deep-learning-for-named-entity-recognition-2-implementing-the-state-of-the-art-bidirectional-lstm-4603491087f1)
 5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
 6. [A Review of Named Entity Recognition (NER) Using Automatic Summarization of Resumes](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
+7. [Information Extraction: Lecture 3 – Rule-based Named Entity Recognition](http://www.cis.uni-muenchen.de/~fraser/information_extraction_2015_lecture/03_rule_based_NER.pdf)
 
 
