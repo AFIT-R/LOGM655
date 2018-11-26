@@ -1,7 +1,7 @@
 ---
 title: "LOGM 655 In-Class activity"
 subtitle: "Named Entity Recognition"
-author: "MAJ Bryan Kolano, 2d Lt Nate Beveridge, 2d Lt Zach Kane"
+author: "MAJ Bryan Kolano, 2d Lt Nate Beveridge, 2d Lt Zachary Kane"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output: 
   html_document:
