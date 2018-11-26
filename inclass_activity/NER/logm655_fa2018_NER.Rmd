@@ -71,7 +71,7 @@ There are challenges when trying to perform named entity recognition. It is diff
 
 
 
-#NER as Sequence Labeling
+##NER as Sequence Labeling
 
 A word-by-word sequence labeling task is the most common algorithm for performing NER. Sequence labeling is simply trying to assign a label to each element of a sequence chosen from a small fixed set of labels. The assigned tags capture both the boundary and the entity type. There are two formats that entities can be tagged: IOB and IO tagging. IOB tagging introduces a tag for the beginning (B) and inside (I) of each entity type, and one for tokens outside (O). This results in _2n+1_ tags for _n_ enitites. IO tagging doesn't identify the B tags, and thus isn't able to distinguish between two entities of the same type right next to one another. This is more rare so typically IO tags are sufficient. IO tagging is more simpler as it only produces _n+1_ tags. Below we'll see a sentence broken down into IOB and IO tagged entities. 
 
@@ -85,8 +85,11 @@ This sentence is tagged and below are the associated IOB and IO labels broken do
 
 The next sections all cover the standard algorithms for NER.
 
+<<<<<<< HEAD
+=======
 # Types of NER
 
+>>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 ##Feature-based NER
 
 Feature-based NER extracts features and then trains either a Maximum Entropy Markov Models (MEMM) or Conditional Random Field (CRF) sequence model. Recall from parts of speeching tagging, MEMM's compute the most likely sequence of tags by combining features of input word $w_i$, its neighbors within _l_ words and the previous _k_ tags (tags conditioned on observed words). Below shows a MEMM parts-of-speech tagger conditioned on previous features (tags) to develop left to right sequence of tags for the sentence "Janet will back the bill".
@@ -116,6 +119,10 @@ A sequence classifier like an MEMM can be trained to label new sentences. In the
 
 
 ##Neural Algorithm for NER
+<<<<<<< HEAD
+
+
+=======
 
 As CRF have to rely on gazeteers and lists, this is a sub-prime solution as there are numerous flaws with these lists in terms of the costs of maintaining and updating the lists as well as lists not capturing every entity.  NLP experts have begun to use recurrent neural networks for NER because of their ability to handle sequential data. 
 
@@ -131,6 +138,7 @@ A graphical depiction of the bi-LSTM model is shown below:
 
 
 The benefits of using a bi-direction neural net is that not only are words after the token of interest considered, but words before the token of interest are also considered, allows the model to uncover more patterns in the data.(4)  This makes the RNN much more accurate, with a much higher $F_1$ measure that a normal LSTM model.  
+>>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 
 ##Rule-based NER
 
@@ -142,6 +150,31 @@ Machine learned (neural or MEMM/CRF) sequnce models are common in academic resea
 4. Apply probabilistic sequence labeling techniques that make use of the tags from previosu stages as additional features.
 
 
+<<<<<<< HEAD
+##Evaluation Methods
+
+NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio fo the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. These metrics all treat the entities are the response rather than the words.
+
+There is mismatch between the training and test conditions that develops from using the entities as the response units. Also the segmentation done in NER can create undue error. For example, identifying the entity _American_ as an organization instead of _America Airlines_ would cause two errors. 
+  - a false positive for an Organization entity
+  - a false negative for I-Organization (Airlines)
+
+
+##Applications of NER
+
+Search engine algorithms can apply NER to shorten the lengthy querery of articles. NER can be applied to each article and entities saved to identify a given article. The key tags in the search query can then be compared with the tags associated with the website articles for a quick and efficient search. 
+
+Recommendations on websites can be developed using the NER to automatically filter relevant content a person might want to view. The entities associated with content in someone's history can be compared with labels assigned to other content to make recommendations.
+
+NER can aid a company's hiring process by simplifying resumes down to entities. A company's customer service complaints or feedback can be classified by their entities and directed to the proper departments.   [(2)](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
+
+
+
+
+
+
+
+=======
 #Evaluation Methods
 
 NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio for the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. 
@@ -157,6 +190,7 @@ NER, much like part of speech, has many uses in and of itself but can also be us
 3. [Named Entity Recognition](https://www.kiv.zcu.cz/site/documents/verejne/vyzkum/publikace/technicke-zpravy/2012/tr-2012-04.pdf)
 4. [Deep Learning for Named Entity Recognition #2: Implementing the state-of-the-art Bidirectional LSTM + CNN model for CoNLL 2003](https://towardsdatascience.com/deep-learning-for-named-entity-recognition-2-implementing-the-state-of-the-art-bidirectional-lstm-4603491087f1)
 5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
+>>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 
 
 
