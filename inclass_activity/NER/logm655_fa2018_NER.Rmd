@@ -89,27 +89,25 @@ The next sections all cover the standard algorithms for NER.
 =======
 # Types of NER
 
->>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 ##Feature-based NER
 
-Feature-based NER extracts features and then trains either a Maximum Entropy Markov Models (MEMM) or Conditional Random Field (CRF) sequence model. Recall from parts of speeching tagging, MEMM's compute the most likely sequence of tags by combining features of input word $w_i$, its neighbors within _l_ words and the previous _k_ tags (tags conditioned on observed words). Below shows a MEMM parts-of-speech tagger conditioned on previous features (tags) to develop left to right sequence of tags for the sentence "Janet will back the bill".
+These algorithms use various features as inputs/predictors for the labeling of entity tags, similar to POS tagging. Some common features are word shape, gazeteer presence (binary), prefix/suffix, words within a given window of the word in question (context), and sometimes POS although some researchers find this not to be a useful feature. Word shape features represent the letter patterns of a word by mapping lower-case letters to 'x', upper case letters to 'X', numbers/digits to 'd', and retaining punctuation. 
 
-<center>
-<img src="images/MEMM_conditioned_on_features.png" alt="Anchor Sequences" vspace="25">
-<center>
+For example 'I.M.F' would be represented as X.X.X and 'DC10-30' would be represented as XXdd-dd.
 
-Feature-based NER instead uses MEMMs to predict a certain entity based on features. The MEMM can condition on any useful feature of the input observation, so multiple features are first identified to feed the MEMM model. Entities are treated as unknown words to a MEMM or CRF model, so the features utilized and first identified consist of the word's spelling or shape. Here's a list of common word features used by the MEMM or CRF models used predicitng unknown words.
+Gazeteers act as entity type dictionaries. In practice this means that membership to a gazeteer acts as a binary feature in that if a word matches an entry in a list of locations then its membership adds to the probability that the word will be tagged as a location. The effectiveness of gazeteers varies greatly from situation to situation and they can be very difficult to maintain. 
+
+Prefixes and suffixes are also used as word features, as well as word embeddings (mapping of words to vectors) or the word in question and neighboring words, word identites of the word in question and neighboring words.
 
 <center>
 <img src="images/unknown_word_features.png" alt="Anchor Sequences" vspace="25">
 <center>
 
-Word shape plays a role in a feature-based apporach. Word shape features are used to represent the letter pattern of a word by mapping lower-case letters to 'x', upper-case to 'X', numbers to 'd', and retaining punctuation. For example I.M.F would map to X.X.X and DC10-30 would map to XXdd-dd.
+The first model that is commonly used for this task is the Maximum Entropy Markov Model (MEMM). Just as with POS tagging, MEMM's are preferred to HMM's due to the fact that they are discriminative as opposed to generative as well as the fact that it is far easier to incorporate the use of many features in predicting tags since they compute the posterior directly (intuition for this is found in Jurafsky pg. 168). Additionally, the MEMM model relaxes the assumption of tag independence present in HMM's. 
 
-CRF models are undirected graphical models, so it is not computing a probability for each entity at each time step. Instead, at each time step, the CRF computes log-linear functions over a clique, a set of relevant features. The undirected nature of CRFs allows them to also use future output features to predict a current entity where as MEMM models only can look at current and previous features. 
+Conditional Random Fields (CRF's) are the other commonly used feature based model; it is also discriminative and does not assume independence between tags. CRF's have a number of advantages over MEMM's; they are able to take into account future words/features, as well as address the label bias problem inherent in MEMM's. The label bias problem arises because transitions out of any one state to the next compete only against one another, making it so that there is a bias toward states with few transition arcs. Conditional random fields normalize transition probablities globally over entire sequence which eliminates the label bias problem. 
 
-
-Lists are developed from both gazetteers and name-lists to improve the algorithm. Gazetteers are lists of place names, often providing millions of entries for locations with geographical and political information. Name-lists consist of names, surnames, or corporations, commerical products, and other areas. Gazetteer and name features are implemented as a binary feature for each name list. These lists can difficult to create, maintain, and aren't always useful.  
+Very generally CRF's can be thought of as F:X-->Y, a function F that maps a set of features X to the most probable tag sequence Y. The function does not act time step by step but rather acts over a window of tokens allowing it to utilize context.
 
 A sequence classifier like an MEMM can be trained to label new sentences. In the below example, the operation of a sequence labeler is at the point where the token _Corp._ is next to be labeled. Everything in the boxed area is the features availible to the classifier.
 
@@ -138,7 +136,6 @@ A graphical depiction of the bi-LSTM model is shown below:
 
 
 The benefits of using a bi-direction neural net is that not only are words after the token of interest considered, but words before the token of interest are also considered, allows the model to uncover more patterns in the data.(4)  This makes the RNN much more accurate, with a much higher $F_1$ measure that a normal LSTM model.  
->>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 
 ##Rule-based NER
 
@@ -159,6 +156,8 @@ There is mismatch between the training and test conditions that develops from us
   - a false positive for an Organization entity
   - a false negative for I-Organization (Airlines)
 
+=======
+
 
 ##Applications of NER
 
@@ -166,18 +165,8 @@ Search engine algorithms can apply NER to shorten the lengthy querery of article
 
 Recommendations on websites can be developed using the NER to automatically filter relevant content a person might want to view. The entities associated with content in someone's history can be compared with labels assigned to other content to make recommendations.
 
-NER can aid a company's hiring process by simplifying resumes down to entities. A company's customer service complaints or feedback can be classified by their entities and directed to the proper departments.   [(2)](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
+NER can aid a company's hiring process by simplifying resumes down to entities. A company's customer service complaints or feedback can be classified by their entities and directed to the proper departments.   [(6)](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
 
-
-
-
-
-
-
-=======
-#Evaluation Methods
-
-NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio for the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. 
 
 # Conclusions
 NER, much like part of speech, has many uses in and of itself but can also be used to filter documents and run further NLP task on.  Though NER can be very helpful to gain insight about a document or use it as a filter to perform other NLP tasks, it is certainly not without its faults.  Language complexities, different abbreviations, and entities having many different meanings will always make NER very difficult.  Advancement of neural networks and updated lists and gazateers will continue to make NER more accurate but it's important for analysts to remember these neural networks and other modelling techniques wont be perfect.    
@@ -190,7 +179,6 @@ NER, much like part of speech, has many uses in and of itself but can also be us
 3. [Named Entity Recognition](https://www.kiv.zcu.cz/site/documents/verejne/vyzkum/publikace/technicke-zpravy/2012/tr-2012-04.pdf)
 4. [Deep Learning for Named Entity Recognition #2: Implementing the state-of-the-art Bidirectional LSTM + CNN model for CoNLL 2003](https://towardsdatascience.com/deep-learning-for-named-entity-recognition-2-implementing-the-state-of-the-art-bidirectional-lstm-4603491087f1)
 5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
->>>>>>> 3a56f9ba6e0bf18bc0e430b8743474afea846309
 
 
 
