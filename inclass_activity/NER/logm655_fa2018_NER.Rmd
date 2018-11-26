@@ -98,6 +98,10 @@ Conditional Random Fields (CRF's) are the other commonly used feature based mode
 
 Very generally CRF's can be thought of as F:X-->Y, a function F takes a set of features X and assigns probabilites of membership to a various tag types Y. The function does not act time step by step but rather acts over a window of tokens allowing it to utilize context. 
 
+<center>
+<img src="images/CRF_formulation.png" alt="Anchor Sequences" vspace="25">
+</center>
+
 Each of the feature based models use the same Viterbi algorithm to find the probability of the best tag sequence. A sequence classifier like an MEMM can be trained to label new sentences. In the below example, the operation of a sequence labeler is at the point where the token _Corp._ is next to be labeled. Everything in the boxed area is the features availible to the classifier.
 
 
