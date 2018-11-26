@@ -193,5 +193,9 @@ NER, much like parts of speech, has many uses in and of itself but can also be u
 5. [Named Entity Recognition and the Road to Deep Learning](http://nlp.town/blog/ner-and-the-road-to-deep-learning/)
 6. [A Review of Named Entity Recognition (NER) Using Automatic Summarization of Resumes](https://towardsdatascience.com/a-review-of-named-entity-recognition-ner-using-automatic-summarization-of-resumes-5248a75de175)
 7. [Information Extraction: Lecture 3 – Rule-based Named Entity Recognition](http://www.cis.uni-muenchen.de/~fraser/information_extraction_2015_lecture/03_rule_based_NER.pdf)
-
-
+8. [Conditional Random Fields - Stanford University (By Daphne Koller)](https://www.youtube.com/watch?v=rc3YDj5GiVM)
+9. [An Intuitive Understanding of Word Embeddings](https://www.analyticsvidhya.com/blog/2017/06/word-embeddings-count-word2veec/)
+10. [Statistical Methods for NLP](http://www.cs.columbia.edu/~smaskey/CS6998/slides/statnlp_week10.pdf)
+11. [Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data](https://repository.upenn.edu/cgi/viewcontent.cgi?article=1162&context=cis_papers)
+12. [OpenNLP Tutorial](https://www.tutorialspoint.com/opennlp/)
+13. [An Introduction to Conditional Random Fields](http://homepages.inf.ed.ac.uk/csutton/publications/crftut-fnt.pdf)

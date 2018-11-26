@@ -1,0 +1,282 @@
+---
+title: "Final Project LOGM655"
+author: "2nd Lt. Dom Speranza"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output: 
+  html_document:
+abstract: 'The orignial triliogy of Star Wars (Episodes IV, V, VI) are some of the most iconic movies of science fiction genre.  Back in the late 1970s, the special effects and story line used would set the stage for hundreds of science fiction movies.  For this final prject, we will be examining the written script of the Star Wars movies. Through these written scripts, we are able to gain basic analysis of movie based on more frequently used words, a brief summary from important parts in each of the movies, and identify all of the major charaters and entities in the movie'
+
+---
+
+#Introduction
+   In this Project I will be analysing the movie scripts for StarWars the original trilogy (episodes IV, V, VI). First off, we will look at basic word analysis for each of the scripts. This will include data scrubbing, word frequency, and charts that will illustrate common words used throughout the script. Next, we will be using packages TextRank and Lexrankr to try and develop a summary of each of the movie scripts and see which software does a better job in summarizing the movie script. Both of these techniques are extractive techniques with limitations that will be addressed.  Finally, we will use packages in R to try and extract all of the charaters and entities from the star wars scripts. A combination of these three techniques will provide an indepth analysis of the original trilogy of Star Wars.  
+
+   Before we get into the data cleaning, we are going to load in any appliciable packages needed for reading in the document along with any packages that might be used later on. This way we will not need to constantly be loading and installing packages and we can focus strictly on the analysis.  
+
+```{r,include = TRUE}
+#read in the movie scripts'
+if (!require("pacman")) install.packages("pacman")
+library(pacman)
+pacman::p_load(tm, 
+               pdftools, 
+               here,
+               tau,
+               tidyverse,
+               stringr,
+               tidytext, 
+               RColorBrewer,
+               qdap,
+               qdapRegex,
+               qdapDictionaries,
+               qdapTools,
+               data.table,
+               coreNLP,
+               scales,
+               text2vec,
+               SnowballC,
+               DT,
+               quanteda,
+               RWeka,
+               broom,
+               tokenizers,
+               grid,
+               knitr,
+               widyr,
+               ggplot2,
+               readr,
+               lexRankr,
+               textrank)
+
+```
+
+#Initial Look
+##Pulling in the Data and Cleaning
+
+   Now we will read in the movies scripts in and merge them into one continuous string with identifiers to determine which movie they came from. This will be helpful in identifying the word frequencies for each of the individual movie scrips. This will also be helpful in the text summarization portion.  
+
+```{r}
+#pull in movies with tiddyverse This will create a tibble. 
+### Note ###
+# You will need to set your own working directory in order for this to fun properly 
+files<-list.files("Files", pattern = '.txt',full.names = T)
+sw_tidy<-tibble::tibble()
+
+#This will read in each of the movie scripts and get rid of the \\ in front of every line in the text
+Episode4<-read_file(files[1])
+Episode4<-gsub('\\\"'," ",Episode4)
+Episode5<-read_file(files[2])
+Episode5<-gsub('\\\"'," ",Episode5)
+Episode6<-read_file(files[3])
+Episode6<-gsub('\\\"'," ",Episode6)
+
+#makes titles as markers for later use
+titles <- c("Episode 4", 
+            "Episode 5", 
+            "Episode 6")
+
+#creates a single list of the movies
+movies<-list(Episode4,
+             Episode5,
+             Episode6)
+
+#runs through each of the movies and seperates it out by each word and which movie that word came from. All of the words are in order.
+for(i in seq_along(titles)) {
+  
+  clean <- tibble::tibble(text = movies[[i]]) %>%
+    tidytext::unnest_tokens(word, text) %>%
+    dplyr::mutate(movie = titles[i]) %>%
+    dplyr::select(movie, dplyr::everything())
+  sw_tidy <- base::rbind(sw_tidy, clean)
+} 
+
+```
+
+   Now that all the scripts are read into a format we can work with, we are able to use the dplyr package to both remove stop words and see which words are used the most in the script. Because each line in the text begins with the charaters name who said the line, it is likely that names of charaters will pop up in the most frequently used words in the script itself.  
+   
+   Lets start by looking briefly at the most frequently used words with the stop words included. We will remove these after this.  This initial look also spans all three movies.  
+
+```{r R.options=list(max.print=10)}
+#most words used without removing stop words
+sw_tidy$movies <- base::factor(sw_tidy$movie, levels = base::rev(titles))
+
+sw_tidy
+
+sw_tidy %>%
+  dplyr::count(word, sort = TRUE)
+```
+
+Unsuprisingly, stop words dominate the top of the word frequency initial look. We can see that the names of some charaters are present event amoung the stop words. Now let us look at the same frequency but after removing stop words.
+
+```{r}
+#most commoon words used with removing stop words
+sw_tidy %>%
+  dplyr::anti_join(stop_words) %>%
+  dplyr::count(word, sort = TRUE)
+```
+   
+   The top words used in the star wars scripts are primarily charaters. This makes sense as each of the lines of the script begins with the charater who said that line. This is similar to how it would appear in a book however the script provides no information as to the setting the charaters are in.  
+
+   Now we can look at the word frequencies from each of the movies individually.  
+
+
+```{r}
+
+#most common words used from each movie removing stop 
+#desplays the top 10 from each movie
+sw_tidy %>%
+  dplyr::anti_join(stop_words) %>%
+  dplyr::group_by(movie) %>%
+  dplyr::count(word, sort = TRUE) %>%
+  dplyr::top_n(10)
+
+```
+
+  Using the ggplot2 package, I am able to illustrate these most commonly used words which does a good job identifying the main charaters for each of the movies.  
+
+```{r}
+library(ggplot2)
+sw_tidy %>%
+  anti_join(stop_words) %>%
+  group_by(movie) %>%
+  count(word, sort = TRUE) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(movie = base::factor(movie, levels = titles),
+         text_order = base::nrow(.):1) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, text_order), n, fill = movie)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ movie, scales = "free_y") +
+  labs(x = "Word", y = "Frequency") +
+  coord_flip() +
+  theme(legend.position="none")
+
+```
+   This gives ua pretty good idea on who the major charaters are in each of the movies with Luke, Han, and C3PO being in the top for each of the movies.  
+
+#Summarization of Each Movie
+   Now that we have looked at the word frequencies for each of the movies, we can move on to look at summaries of the movie script.  As mentioned above, these movie scrips are similar to books except the scripts have no descriptions of the environment. There are strictly statements that each charaters says.  Keeping that in mind, it is unrealistice to construct a full summary of the movie using extractive methods. Rather, we will pull out important lines said by charaters in an attempt to jog someones memory of what happens in the movie.  Our goal is to obtain the sequence of events in case someone who has already seen the movie but has fogotten the order of events that had taken place throughout the movie.  
+   
+   First we will have to restructor the data a little bit.  
+
+```{r R.options=list(max.print=10)}
+#the same as above but we are creating a new tibble
+titles <- c("Episode 4", 
+            "Episode 5", 
+            "Episode 6")
+movies2<-list(Episode4,
+             Episode5,
+             Episode6)
+
+sw_tidy2 <- tibble::tibble()
+
+#rather than tokenize with words, we will use sentences as our tokenizer so the extraction will be an entire sentense.  
+for(i in seq_along(titles)) {
+  
+  clean <- tibble::tibble(text = movies[[i]]) %>%
+    tidytext::unnest_tokens(sentence, text,token ='sentences') %>%
+    dplyr::mutate(movie2 = titles[i]) %>%
+    dplyr::select(movie2, dplyr::everything())
+  
+  sw_tidy2 <- base::rbind(sw_tidy2, clean)
+}
+#sw_tidy2
+
+#This will change all the abbreviations in case there were any that were easily recognizeable
+for (i in 1:3){
+  
+  movies2[[i]]<-qdap::mgsub(text.var = movies2[[i]],
+                           pattern = c(abbreviations[[1]]),
+                           replacement = c(abbreviations[[2]]))
+}
+
+
+#sw_tidy2
+#This will get rid of all the numbers which were in front of each line of the script. We should no longer need these numbers as they may skew our results. 
+sw_tidy2$sentence<-gsub(sw_tidy2$sentence,
+      pattern = "[0-9]",
+      replacement = ""
+      )
+#check to make sure it got rid of the numbers.  
+sw_tidy2$sentence[1:10]
+```
+  Now that we have reformatted our data, we can use the lexrankr package to get a summary from the movie.  Because our goal is the get the sequence of events for each of the movies, we will try and find the top three most important lines for each quarter of the movies.  For example we will summarize episode 4 for the first 1/4 lines, then another summarization for the second 1/4 lines and so on.  This will allow us to obtain a sequence of events summary for someone who has already seen the movie but may have forgotten the order of which the events took place.  
+```{r}
+library("lexRankr")
+#this will subset into each of the movies. Not completely nessasary but easier to think through.  
+Ep4_tidy<-subset(sw_tidy2,sw_tidy2$movie2=="Episode 4")
+Ep5_tidy<-subset(sw_tidy2,sw_tidy2$movie2=="Episode 5")
+Ep6_tidy<-subset(sw_tidy2,sw_tidy2$movie2=="Episode 6")
+Ep4Summary<-NULL
+Ep5Summary<-NULL
+Ep6Summary<-NULL
+#perform lexrank for top 3 sentences for the quarters of episode 4
+for (i in 1:4){
+top_3Ep4 = lexRankr::lexRank(Ep4_tidy$sentence[(i-1)*round(nrow(Ep4_tidy)/4)+1:round(nrow(Ep4_tidy)/4)*i],
+                          #only 1 article; repeat same docid for all of input vector
+                          docId = rep(1, round(length(Ep4_tidy$sentence[1:nrow(Ep4_tidy)])/4)),
+                          #return 3 sentences
+                          n = 3,
+                          continuous = TRUE)
+
+#reorder the top 3 sentences to be in order of appearance in article
+order_of_appearance = order(as.integer(gsub("_","",top_3Ep4$sentenceId)))
+#extract sentences in order of appearance
+ordered_top_3 = top_3Ep4[order_of_appearance, "sentence"]
+Ep4Summary<-cbind(Ep4Summary,ordered_top_3)
+}
+Ep4Summary
+
+
+#perform lexrank for top 3 sentences for the quarters of episode 5
+for (i in 1:4){
+  
+
+top_3Ep5 = lexRankr::lexRank(Ep5_tidy$sentence[(i-1)*round(nrow(Ep5_tidy)/4)+1:round(nrow(Ep5_tidy)/4)*i],
+                          #only 1 article; repeat same docid for all of input vector
+                          docId = rep(1, round(length(Ep5_tidy$sentence[1:nrow(Ep5_tidy)])/4)),
+                          #return 3 sentences
+                          n = 3,
+                          continuous = TRUE)
+
+#reorder the top 3 sentences to be in order of appearance in movie
+order_of_appearance = order(as.integer(gsub("_","",top_3Ep5$sentenceId)))
+#extract sentences in order of appearance
+ordered_top_3 = top_3Ep5[order_of_appearance, "sentence"]
+Ep5Summary<-cbind(Ep5Summary,ordered_top_3)
+}
+Ep5Summary
+
+#perform lexrank for top 3 sentences for the quarters of episode 6
+for (i in 1:4){
+  
+
+top_3Ep6 = lexRankr::lexRank(Ep6_tidy$sentence[(i-1)*round(nrow(Ep6_tidy)/4)+1:round(nrow(Ep6_tidy)/4)*i],
+                          #only 1 article; repeat same docid for all of input vector
+                          docId = rep(1, round(length(Ep6_tidy$sentence[1:nrow(Ep6_tidy)])/4)),
+                          #return 3 sentences
+                          n = 3,
+                          continuous = TRUE)
+
+#reorder the top 3 sentences to be in order of appearance in article
+order_of_appearance = order(as.integer(gsub("_","",top_3Ep6$sentenceId)))
+#extract sentences in order of appearance
+ordered_top_3 = top_3Ep6[order_of_appearance, "sentence"]
+Ep6Summary<-cbind(Ep6Summary,ordered_top_3)
+}
+Ep6Summary
+
+top_3Ep6 = lexRankr::lexRank(Ep6_tidy$sentence[1:nrow(Ep6_tidy)],
+                          #only 1 article; repeat same docid for all of input vector
+                          docId = rep(1, length(1:nrow(Ep6_tidy))),
+                          #return 3 sentences
+                          n = 3,
+                          continuous = TRUE)
+
+#reorder the top 3 sentences to be in order of appearance in movie
+order_of_appearance = order(as.integer(gsub("_","",top_3Ep6$sentenceId)))
+#extract sentences in order of appearance
+ordered_top_3 = top_3Ep6[order_of_appearance, "sentence"]
+ordered_top_3
+```
+
