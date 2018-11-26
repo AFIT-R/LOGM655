@@ -141,8 +141,6 @@ Rule-based NER will typically make repeated passes over text and uses previous r
 These more in depth steps to rule based incorporate multipe entity rules and which rules should be applied over a larger span of text (longer entities). 
 
 
-
-
 ##Evaluation Methods
 
 NER systems are evaluated by recall, precision, and $F_1$ measure. Recall is the ratio fo the number of correcetly labeled responses to the total that should have been labeled. Precision is the ratio of the number of correctly labeled respsonses to the total labeled. The F-measure is the harmonic mean of the two. These metrics all treat the entities are the response rather than the words.
