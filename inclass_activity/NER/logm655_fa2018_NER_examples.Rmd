@@ -26,13 +26,13 @@ In order for openNLP to work, you must first download the following package
 Next, load the following packages, or call them from the library.
 ```{r}
 
-pacman::p_install(c("openNLP","cleanNLP","readr","NLP","monkeylearn"))
+pacman::p_install(c("openNLP","coreNLP","readr","NLP","monkeylearn"))
 
 # Or if you already have them installed, just load the libraries
 
 library(openNLP)
 library(NLP)
-library(cleanNLP)
+library(coreNLP)
 library(monkeylearn)
 ```
 
@@ -42,9 +42,16 @@ Now that the packages are loaded, we need to insert the text documents
 ```{r}
 
 rem <- readr::read_file("Remington.txt")
+title <- c()
+for (i in 1:4){
+  j=1989
+  title[i] <- paste("Bush_",j,".txt", sep = "")
+  title <- c(title)
+  j <- j + 1
+}
 
-
-
+  
+title
 ```
 
 
