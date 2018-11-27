@@ -66,15 +66,22 @@ rem <- readr::read_file("Remington.txt")
 The NER pieces of the different NLP packages worked fairly well for the State of the Union Addresses.  However, using the article from class on Monday, problems arose when attempting to identify persons, locations, and organizations.
 
 ```{r}
-
+#first set the document as one string
 s <- as.String(rem)
 
+```
+
+Next, we need to use the maximum entropy functions in openNLP to annotate the Remington document.
+
+```{r}
 sent_token_annotator <- Maxent_Sent_Token_Annotator()
 word_token_annotator <- Maxent_Word_Token_Annotator()
 
 a2 <- annotate(text, list(sent_token_annotator, word_token_annotator))
+```
 
-
+Let's first look at the person entities
+```{r}
 ## Entity recognition for persons.
 entity_annotator <- Maxent_Entity_Annotator()
 annotate(s, entity_annotator, a2)
@@ -82,7 +89,10 @@ annotate(s, entity_annotator, a2)
 entity_annotator(s, a2)
 ## And slice ...
 s[entity_annotator(s, a2)]
+```
 
+Next, the location entities
+```{r}
 #Entity recognition for locations
 entity_annotator_location <- Maxent_Entity_Annotator(kind = "location")
 annotate(s, entity_annotator_location, a2)
@@ -92,9 +102,10 @@ entity_annotator_location(s, a2)
 s[entity_annotator_location(s, a2)]
 ## Variant with sentence probabilities as features.
 annotate(s, Maxent_Entity_Annotator(probs = TRUE), a2)
+```
 
-
-
+Next, the organization entities
+```{r}
 #Entity Recognition for Organizations
 entity_annotator_org <- Maxent_Entity_Annotator(kind = "organization")
 annotate(s, entity_annotator_org, a2)
@@ -102,7 +113,10 @@ annotate(s, entity_annotator_org, a2)
 entity_annotator_org(s, a2)
 ## And slice ...
 s[entity_annotator_org(s, a2)]
+```
 
+Finally, the date entities
+```{r}
 #Entity Recognition for dates
 entity_annotator_date <- Maxent_Entity_Annotator(kind = "date")
 annotate(s, entity_annotator_date, a2)
@@ -110,7 +124,7 @@ annotate(s, entity_annotator_date, a2)
 entity_annotator_date(s, a2)
 ## And slice ...
 s[entity_annotator_date(s, a2)]
-
+```
 
 
 
