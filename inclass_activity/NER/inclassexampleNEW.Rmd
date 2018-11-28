@@ -39,7 +39,7 @@ library(monkeylearn)
 
 Now that the packages are loaded, we need to insert the text documents
 
-```{r}
+```{r, results='hide'}
 
 rem <- readr::read_file("Remington.txt")
 title <- c()
@@ -60,8 +60,14 @@ for (i in 1:4){
 
 
 all <- c(title,title2)
+speech <- c()
+for (i in seq_along(all)){
+  
+  speech[i] <- read_file(all[i])
+  i <- i + 1
+}
 
-for (i in seq_along(all))
+
 
 ```
 
