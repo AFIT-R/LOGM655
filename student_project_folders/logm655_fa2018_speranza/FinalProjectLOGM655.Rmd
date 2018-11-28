@@ -4,14 +4,19 @@ author: "2nd Lt. Dom Speranza"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output: 
   html_document:
-abstract: 'The orignial triliogy of Star Wars (Episodes IV, V, VI) are some of the most iconic movies of science fiction genre.  Back in the late 1970s, the special effects and story line used would set the stage for hundreds of science fiction movies.  For this final prject, we will be examining the written script of the Star Wars movies. Through these written scripts, we are able to gain basic analysis of movie based on more frequently used words, a brief summary from important parts in each of the movies, and identify all of the major charaters and entities in the movie'
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+abstract: 'The orignial triliogy of Star Wars (Episodes IV, V, VI) are some of the most iconic movies of science fiction.  Back in the late 1970s, the special effects and story line used would set the stage for hundreds of science fiction movies.  For this final prject, we will be examining the written script of the Star Wars movies. Through these written scripts, we are able to gain basic analysis of movie based on more frequently used words, a brief summary from important parts in each of the movies, and identify the major charaters and entities in the movie'
 
 ---
 
-#Introduction
-   In this Project I will be analysing the movie scripts for StarWars the original trilogy (episodes IV, V, VI). First off, we will look at basic word analysis for each of the scripts. This will include data scrubbing, word frequency, and charts that will illustrate common words used throughout the script. Next, we will be using packages TextRank and Lexrankr to try and develop a summary of each of the movie scripts and see which software does a better job in summarizing the movie script. Both of these techniques are extractive techniques with limitations that will be addressed.  Finally, we will use packages in R to try and extract all of the charaters and entities from the star wars scripts. A combination of these three techniques will provide an indepth analysis of the original trilogy of Star Wars.  
+#Project Overview
+   In this Project we will be analysing the movie scripts for StarWars the original trilogy (episodes IV, V, VI). First off, we will look at basic word analysis for each of the scripts. This will include data scrubbing, word frequency, and charts that will illustrate common words used throughout the script. Next, we will be using the package Lexrankr to try and develop a summary of each of the movie scripts and see how the software does in summarizing the movie scripts. This technique is extractive with limitations that will be addressed.  Finally, we will use packages NLP and openNLP in R to try and extract all of the charaters and entities from the star wars scripts. A combination of these three techniques will provide an indepth analysis of the original trilogy of Star Wars.  
 
-   Before we get into the data cleaning, we are going to load in any appliciable packages needed for reading in the document along with any packages that might be used later on. This way we will not need to constantly be loading and installing packages and we can focus strictly on the analysis.  
+
+## Get Nessasary Packages for Analysis
+   Before we get into the data cleaning, we are going to load in any appliciable packages needed for reading in the document along with any packages that might be used later on. This way we will not need to constantly be loading and installing packages and we can focus strictly on the analysis. There might be some packages that are not used.   
 
 ```{r,include = TRUE}
 #read in the movie scripts'
@@ -45,12 +50,29 @@ pacman::p_load(tm,
                ggplot2,
                readr,
                lexRankr,
-               textrank)
+               textrank,
+               openNLP,
+               rJava,
+               magrittr,
+               readr,
+               openNLPmodels.en,
+               NLP)
 
 ```
 
-#Initial Look
-##Pulling in the Data and Cleaning
+#Methodology
+
+ This section will go into a description of the data, the cleaning of the data for the various packages, and the analysis done on the data.  
+
+##Where to get the Data
+
+ This dataset was taken from Kaggle where several various datasets can be taken from.  The data included 3 text documents. Each document is the script for a star wars movie (episodes 4,5 and 6).  The original format of these text files begin each line of script with a number (indicated which line number that was), followed by the charater who is saying the line, and finally the sentence for what is actually said.  There is no filler inbetween the lines said. No setting or description of what is going on aside from what is being said can be gathered from the data. This will prove some portions of analysis difficult to accomplish. 
+ 
+ Because each package seems to need the data in a slightly different format, we will do data cleaning and formatting befoe each of the sections.  
+
+#Analysis
+##Initial Look at the Scripts
+###Pulling in the Data and Cleaning
 
    Now we will read in the movies scripts in and merge them into one continuous string with identifiers to determine which movie they came from. This will be helpful in identifying the word frequencies for each of the individual movie scrips. This will also be helpful in the text summarization portion.  
 
@@ -110,7 +132,7 @@ Unsuprisingly, stop words dominate the top of the word frequency initial look. W
 ```{r}
 #most commoon words used with removing stop words
 sw_tidy %>%
-  dplyr::anti_join(stop_words) %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
   dplyr::count(word, sort = TRUE)
 ```
    
@@ -124,19 +146,20 @@ sw_tidy %>%
 #most common words used from each movie removing stop 
 #desplays the top 10 from each movie
 sw_tidy %>%
-  dplyr::anti_join(stop_words) %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
   dplyr::group_by(movie) %>%
   dplyr::count(word, sort = TRUE) %>%
   dplyr::top_n(10)
 
 ```
 
-  Using the ggplot2 package, I am able to illustrate these most commonly used words which does a good job identifying the main charaters for each of the movies.  
+Using the ggplot2 package, I am able to illustrate these most commonly used words which does a good job identifying the main charaters for each of the movies.  
 
 ```{r}
 library(ggplot2)
+library(dplyr)
 sw_tidy %>%
-  anti_join(stop_words) %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
   group_by(movie) %>%
   count(word, sort = TRUE) %>%
   top_n(10) %>%
@@ -152,9 +175,11 @@ sw_tidy %>%
   theme(legend.position="none")
 
 ```
+
    This gives ua pretty good idea on who the major charaters are in each of the movies with Luke, Han, and C3PO being in the top for each of the movies.  
 
-#Summarization of Each Movie
+##Summarization of Each Movie
+
    Now that we have looked at the word frequencies for each of the movies, we can move on to look at summaries of the movie script.  As mentioned above, these movie scrips are similar to books except the scripts have no descriptions of the environment. There are strictly statements that each charaters says.  Keeping that in mind, it is unrealistice to construct a full summary of the movie using extractive methods. Rather, we will pull out important lines said by charaters in an attempt to jog someones memory of what happens in the movie.  Our goal is to obtain the sequence of events in case someone who has already seen the movie but has fogotten the order of events that had taken place throughout the movie.  
    
    First we will have to restructor the data a little bit.  
@@ -180,16 +205,6 @@ for(i in seq_along(titles)) {
   
   sw_tidy2 <- base::rbind(sw_tidy2, clean)
 }
-#sw_tidy2
-
-#This will change all the abbreviations in case there were any that were easily recognizeable
-for (i in 1:3){
-  
-  movies2[[i]]<-qdap::mgsub(text.var = movies2[[i]],
-                           pattern = c(abbreviations[[1]]),
-                           replacement = c(abbreviations[[2]]))
-}
-
 
 #sw_tidy2
 #This will get rid of all the numbers which were in front of each line of the script. We should no longer need these numbers as they may skew our results. 
@@ -226,7 +241,11 @@ ordered_top_3 = top_3Ep4[order_of_appearance, "sentence"]
 Ep4Summary<-cbind(Ep4Summary,ordered_top_3)
 }
 Ep4Summary
+```
 
+The LexRankr package does a pretty good job in summarizing the different parts for the star wars episode 4 movie! Note: this is the same summarizer than common Reddit summarizes use. 
+
+```{r}
 
 #perform lexrank for top 3 sentences for the quarters of episode 5
 for (i in 1:4){
@@ -247,6 +266,12 @@ Ep5Summary<-cbind(Ep5Summary,ordered_top_3)
 }
 Ep5Summary
 
+```
+
+Lexrankr does an alright job summarizing episode 5 but there are sections where it does not perform very well.  This may be because the first part of episode 5 is a larger action sequence which the script is not able to fully grasp. 
+
+
+```{r}
 #perform lexrank for top 3 sentences for the quarters of episode 6
 for (i in 1:4){
   
@@ -267,4 +292,86 @@ Ep6Summary<-cbind(Ep6Summary,ordered_top_3)
 Ep6Summary
 
 ```
+
+Same as for episode 5, episode 6 does an alright job in some parts but a poor job in summarizing in other parts.  
+Likely due to the non-descriptive actions and scenery in the script text files, the lexrankr package is limited on the amount of information it is able to gather strictly from the written script.  
+
+Now we will move on to name entity recognition where we will try and pull out the main charaters and locations from the script.  
+
+##Name Entity Recognition
+
+Now that we have tried to summarize, we are going to attempt to pick out the entities from the script.  
+Again, we will start from scratch because of the slightly different formatting required to use the packages for openNLP and NLP.  
+
+```{r}
+
+#most of the data reading is the same.  
+
+files<-list.files("Files", pattern = '.txt',full.names = T)
+
+
+Episode4<-read_file(files[1])
+Episode4<-gsub('\\\"'," ",Episode4)
+Episode5<-read_file(files[2])
+Episode5<-gsub('\\\"'," ",Episode5)
+Episode6<-read_file(files[3])
+Episode6<-gsub('\\\"'," ",Episode6)
+
+#makes titles as markers for later use
+titles <- c("Episode 4", 
+            "Episode 5", 
+            "Episode 6")
+
+#creates a single list of the movies
+movies<-list(Episode4,
+             Episode5,
+             Episode6)
+
+#makes the movie as a single string
+movies<-as.String(movies)
+movies<-gsub(movies, 
+      pattern = "[0-9]",
+      replacement = "")
+
+```
+
+Next, we need to use the maximum entropy functions in openNLP to annotate the star wars movies document. Additionally we will use sentence and word annotators to further prepare our data.  
+
+```{r}
+#we can use the sent and word token annotators to annotate the entire script
+sent_token_annotator <- Maxent_Sent_Token_Annotator()
+word_token_annotator <- Maxent_Word_Token_Annotator()
+
+#this will annotate the entire script
+movies_tokenized <- NLP::annotate(movies, list(sent_token_annotator, word_token_annotator))
+
+person_entity_annotator<-Maxent_Entity_Annotator(kind="person")
+location_entity_annotator<-Maxent_Entity_Annotator(kind="location")
+
+
+# we can now bundle them into one list
+annotators_all<-list(person_entity_annotator,location_entity_annotator)
+
+
+```
+
+Using the person and location annotators, we are able to see how well the packages do in picking out star wars locations and charaters.  
+
+```{r}
+
+people<-movies[annotators_all[[1]](movies,movies_tokenized)]
+locations<-movies[annotators_all[[2]](movies,movies_tokenized)]
+table(rbind(people,locations))
+```
+
+The packages do a decent job in picking out the main charaters tho it is missing a couple. Additionally, there are random words included that the package thought were important descriptors but ended up not being important.  Some limitations for this can be seen. However this package was constructed or trained probably did not have star wars lingo and charaters in their dictionary. This means that the package needed to use different methods for determining if a word was an entity. This lead to several missclassifications. Overall all it did an alright job in finding the charaters and locations.  
+
+
+#Conclusion
+We have now gone through several different text mining analysis techniques with various R packages. We saw the most important words used in the script. We used R packages to try and build summaries for each of the movies. Finally we used NLP and openNLP packages to pull out important charaters and locations from the stat wars movies.  Although there were several limitations to these packages and methods, we were able to gain insight to the star wars movies without actually needing to rewatch the movies which accomplished our initial goal for the project.
+
+#Future Work
+If we had more time for the project, it would be interesting to see what other techniques work with the scripts.  Also, we could also look at other sources of data rather than the movie script itself. Potentially we could find better results if we were able to action and scenery descriptions more similar to what is in a book rather than a script. This might provide more important information that would help with our summarization and Name Entity recognition.  
+
+All in all, this was a great learning experience and feel much more comfortable diving into new packages in R.  This has been one of my favorite classes I have taken here at AFIT!
 
