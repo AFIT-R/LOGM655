@@ -1,0 +1,93 @@
+---
+title: "Kane coreNLP"
+author: "Zachary Kane"
+date: "November 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/LOGM655/inclass_activity/NER")
+
+```
+
+## Load in the data
+
+```{r}
+pacman::p_load(readr)
+rem <- readr::read_file("Remington.txt")
+rem
+Bush_1989 <- readr::read_file("Bush_1989.txt")
+```
+
+## Download coreNLP
+
+```{r}
+
+pacman::p_load("rJava")
+#               "coreNLP")
+devtools::install_github('statsmaths/coreNLP') 
+#install.packages("coreNLP")
+```
+
+There is a coreNLP package on CRAN but the only the developmental github version will complete sentiment analysis when I tested between the two.
+
+```{r}
+coreNLP::downloadCoreNLP() # creating an instance (opening the pipeline)
+coreNLP::initCoreNLP()
+str <- c("President George Bush spoke to the troops on board of an aircraft carrier in the Gulf of Mexico.")
+library(coreNLP)
+output <- coreNLP::annotateString(str)
+NER <- coreNLP::getToken(output)
+NER[,c("sentence","id","token","POS","NER")]
+
+# word character. Raw word in the input text.
+# lemma character. Lemmatized form the token.
+
+```
+
+The Stanford typed dependencies representation was designed to provide a simple description of the grammatical relationships in a sentence that can easily be understood and effectively used by people without linguistic expertise who want to extract textual relations. In particular, rather than the phrase structure representations that have long dominated in the computational linguistic community, it represents all sentence relationships uniformly as typed dependency relations.The current representation contains approximately 50 grammatical relations (depending slightly on the options discussed in section 4). The dependencies are all binary relations: a grammatical relation holds between a governor (also known as a regent or a head) and a dependent. Further explanation of dependencies can be found in References [(1)](https://nlp.stanford.edu/software/dependencies_manual.pdf).
+
+```{r}
+# Returns a data frame of the coreferences of an annotation
+coreNLP::getDependency(output)
+```
+
+StanfordCoreNLP includes the sentiment tool and various programs which support it. The model can be used to analyze text as part of StanfordCoreNLP by adding “sentiment” to the list of annotators. There is also command line support and model training support.
+
+SentimentAnnotator implements Socher et al’s sentiment model. Attaches a binarized tree of the sentence to the sentence level CoreMap. The nodes of the tree then contain the annotations from RNNCoreAnnotations indicating the predicted class and scores for that subtree [(2)](https://stanfordnlp.github.io/CoreNLP/sentiment.html).
+
+```{r}
+coreNLP::getSentiment(output)
+```
+
+## Applied to Remington Text
+
+```{r}
+rem_output <- coreNLP::annotateString(rem)
+rem_output$token
+```
+
+
+```{r}
+rem_NER <- coreNLP::getToken(rem_output)
+table(rem_NER$NER)
+people_rem <- subset(rem_NER, NER=="PERSON")
+(people_rem)
+```
+
+```{r}
+library(tidyr)
+rem_sent <- coreNLP::getSentiment(rem_output)
+rem_sent
+# 21 sentences identified in the beginning
+```
+
+
+
+
+
+
+
+
+
