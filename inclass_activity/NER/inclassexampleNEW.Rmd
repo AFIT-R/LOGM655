@@ -6,6 +6,7 @@ date: "`r format(Sys.Date(), '%d %b %Y')`"
 output: 
   html_document:
     code_folding: 'hide'
+    
 ---
 
 # Named Entity Recognition using openNLP
@@ -80,6 +81,7 @@ for (i in seq_along(all)){
 
 
 ```
+
 # Named Entity Recognition using monkeylearn
 
 
@@ -150,9 +152,6 @@ entity_annotator_date(s, a2)
 s[entity_annotator_date(s, a2)]
 ```
 
-
-
-```
 
 
 
