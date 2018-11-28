@@ -266,17 +266,5 @@ Ep6Summary<-cbind(Ep6Summary,ordered_top_3)
 }
 Ep6Summary
 
-top_3Ep6 = lexRankr::lexRank(Ep6_tidy$sentence[1:nrow(Ep6_tidy)],
-                          #only 1 article; repeat same docid for all of input vector
-                          docId = rep(1, length(1:nrow(Ep6_tidy))),
-                          #return 3 sentences
-                          n = 3,
-                          continuous = TRUE)
-
-#reorder the top 3 sentences to be in order of appearance in movie
-order_of_appearance = order(as.integer(gsub("_","",top_3Ep6$sentenceId)))
-#extract sentences in order of appearance
-ordered_top_3 = top_3Ep6[order_of_appearance, "sentence"]
-ordered_top_3
 ```
 
