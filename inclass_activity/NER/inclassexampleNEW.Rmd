@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE,
 In order for openNLP to work, you must first download the following package
 ```{r , results='hide'}
 
-options( java.parameters = "-Xmx8g" )
 # install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/",type = "source")
 ```
 Next, load the following packages, or call them from the library.
@@ -37,7 +36,7 @@ library(coreNLP)
 library(monkeylearn)
 library(readr)
 library(magrittr)
-options( java.parameters = "-Xmx5120m" )
+
 library(rJava)
 ```
 
