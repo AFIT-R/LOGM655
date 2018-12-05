@@ -819,7 +819,7 @@ author_words2 %>%
 
 <center><h1>Findings and Conclusions</h1></center>
 
-Overall sentiment analysis for fairy tales proved fruitful. This project seperated text by Aarne-Thomspon-Uther categories, sentences within stories, and by author to explore how sentiment in fairy tales vary across topics, cultures, and throughout a story. Three lexicons, *AFINN*,  *BING*, and *NRC* were compared for assigning word sentiment. The results from the three research questions indicate that the *BING* sentiment lexicon produced the most accurate results. 
+Overall sentiment analysis for fairy tales proved fruitful. This project seperated text by Aarne-Thomspon-Uther categories, sentences within stories, and by author to explore how sentiment in fairy tales vary across topics, cultures, and throughout a story. Three lexicons, *AFINN*,  *BING*, and *NRC* were compared for assigning word sentiment. The results from the three research questions indicate that the *BING* sentiment lexicon produced the most accurate results. Sentiment analysis across topics identified that the proportion of sentiment between topics only varies slightly and that many topics have similar trends between positive and negative sentiment. Plotting the distribution of sentiment across sentences we found that the *BING* lexicon worked best and that we were able to identify important sentences and moments in the story with regard to emotion. Even though a common trend across stories was not seen we were able to see how sentiment varied throughout a story and found that the sentiment in a final sentence of a fairy tale differs between cultural versions. Finally, the sentiment analysis across cultures showed that the Brother's Grimm tend to be more negative than Charles Perrault and that this was apparant throughout the cultural versions of *Cinderella* and *Sleeping Beauty* but not *Little Red Riding Hood*. 
 
 <center><h1>Future Work</h1></center>
 
@@ -827,8 +827,8 @@ There is ample opportunity to expand upon the research from this project. Based 
 
 - Incorporate topic specific sentiment lexicons that are more accurate for 18th and 19th century fairy tales.
 - Consider an alternative methodology for quantifying sentiment that is not dependent on the use of lexicons.
-- Increase the sample of text in the corpus to include more 
-- Using the sentiment, see if 
+- Increase the sample of text in the corpus
+- Compare sentence sentiment to document summmarization to see how well the absolute value of standardized sentiment counts can highlight key sentences.  
 
 <center><h1>References</h1></center>
 
