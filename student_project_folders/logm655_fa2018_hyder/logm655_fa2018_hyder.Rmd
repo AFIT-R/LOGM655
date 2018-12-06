@@ -1,5 +1,5 @@
 ---
-title: <center><h1>LOGM 655 Student Project Report</h3></center>
+title: LOGM 655 Student Project Report
 author: <center><h3>Dylan Hyder</h3></center>
 date: <center><h5>`r format(Sys.Date(), '%d %b %Y')`</h5></center>
 output: 
@@ -265,7 +265,7 @@ grimm[1:6,2]
 
 Utilizing *regex*, the start of each story is identified from capitalization and thereby each line of text is assigned to its corresponding story. Additionally, the cleaned text is transformed into a *tidy* data structure by making each word an observation. The sentence and paragraph in which each word appears is stored as additional variables in the dataset. This preserves the structure of the original text in varying granularity for the second research question which quantifies the written sentiment across the duration of each story. Additionally, each story is indexed according to the Aarne-Thompson-Uther classification system used for the first research question. Finally, the corpus for this project is completed by combining the fairy tales of the Brothers Grimm and Charles Perault into a single data frame. The following code executes these steps. 
 
-```{r createCorpus, warning=FALSE, message=FALSE} 
+```{r createCorpus, warning=FALSE, message=FALSE, cache=TRUE} 
 
 FairyTaleCorpus <- bind_rows(grimm,Perrault) #Combine fairy tales into a single corpus
 FairyTaleCorpus <- FairyTaleCorpus[-c(47608:47617),]
@@ -379,25 +379,39 @@ story_words <- story_words %>%
 The following word clouds show the words which occur most frequently by author according to the *tf* and *tf-idf* scores respectively. When comparing frequent words by authors it appears as though the *tidytext* package did an adequate job removing stop words in spite of differences in language used in the era's of these fairy tales and today. In the *tf* word cloud we see some instances of frequently used words that are common between authors such  *king*, *wife*, and *time*. Words which are frequent but not common between authors are shown in the *tf-idf* word cloud and include author specific words such as *hans* and *ogre*. It appears that frequent words less common between authors are lots of character names or types. Interestingly, the word *faithful* is used frequently by the Brothers Grimm but not Perrault which might appear later when comparing sentiment across authors/ cultures. In general, the term frequency results are consistent with words that one might expect to appear frequently in fairy tales. 
 
 ```{r wordcloud_author, warning=FALSE, message=FALSE, fig.width=15, fig.height=15, fig.align='center'}
+word.colors <- c("#F8766D", "#00BFC4")
+title.bg.colors <- c("#F8766D", "#00BFC4")
 author_words %>%
    dplyr::arrange(dplyr::desc(tf)) %>%
-        dplyr::mutate(word = base::factor(word, levels = base::rev(base::unique(word))),
-               author = base::factor(gutenberg_id)) %>% 
-        dplyr::group_by(author) %>%
-        dplyr::top_n(15, wt = tf) %>%
-  acast(word ~ gutenberg_id, value.var = "tf", fill = 0) %>%
-  comparison.cloud(colors = c("#F8766D", "#00BFC4"),title.bg.colors = c("#F8766D", "#00BFC4"),
-                   max.words = 100)
+   dplyr::mutate(word = factor(word, 
+                               levels = rev(unique(word))),
+                 author = factor(gutenberg_id)) %>% 
+   dplyr::group_by(author) %>%
+   dplyr::top_n(15, wt = tf) %>%
+   acast(word ~ gutenberg_id, 
+         value.var = "tf", 
+         fill = 0) %>%
+   comparison.cloud(colors = word.colors,
+                    title.bg.colors = title.bg.colors,
+                    max.words = 100, 
+                    scale = c(10,1),
+                    title.size = 4)
 
 author_words %>%
    dplyr::arrange(dplyr::desc(tf_idf)) %>%
-        dplyr::mutate(word = base::factor(word, levels = base::rev(base::unique(word))),
-               author = base::factor(gutenberg_id)) %>% 
-        dplyr::group_by(author) %>%
-        dplyr::top_n(15, wt = tf_idf) %>%
-  acast(word ~ gutenberg_id, value.var = "tf_idf", fill = 0) %>%
-  comparison.cloud(colors = c("#F8766D", "#00BFC4"),title.bg.colors = c("#F8766D", "#00BFC4"),
-                   max.words = 100)
+   dplyr::mutate(word = factor(word, 
+                               levels = rev(unique(word))),
+                 author = factor(gutenberg_id)) %>% 
+   dplyr::group_by(author) %>%
+   dplyr::top_n(15, wt = tf_idf) %>%
+   acast(word ~ gutenberg_id, 
+         value.var = "tf_idf", 
+         fill = 0) %>%
+   comparison.cloud(colors = word.colors,
+                    title.bg.colors = title.bg.colors,
+                    max.words = 100, 
+                    scale = c(10,1), 
+                    title.size = 4)
 ```
 
 <h3>Word Frequency By Topic</h3>
