@@ -1,0 +1,617 @@
+---
+title: "LOGM 655 Project Report"
+author: "Bryan Kolano"
+date: "December 7, 2018"
+output: html_document
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+This purpose of this project was to take a deep dive into the 35 State of the Union (SOTU) Addresses from 1982-2016 to see what trends and patterns could be found among the speeches.  Various methods were employed during the project, including initial data analysis using the TidyVerse, Latent Semantic Analysis (LSA) and Latent Dirichlet Allocation (LDA) for topic modeling, Structured Topic Models, and  sentiment analysis to uncover the nuances of the speeches.  Additionally, word clouds were used, not to present analysis but to explore a few of the different visualization techniques in natural language processing.
+
+# Introduction, Problem Statement, and  Data Description
+
+
+## Introduction
+The SOTU address, occurring in January of each year, is the president's address to the members of congress on the strengths and current path of the nation.  Watched by millions of people every year, each president uses the event to highlight his achievements in office over the previous year.  The president uses the event to not only talk about the previous year's events and milestones, but to note what he plans to accomplish in the next year and what he sees the path of the nation to be.  
+
+The issues the president addresses during his speech are often directly tied to the most current social and political topics, and are often among the most polarizing between the main parties.  After the president finishes the address, members of congress of the same party typically talk about the past accomplishments of their party and the way ahead while members of the opposite party downplay or dismiss the accomplishments of the other party and also discuss their planned way ahead.  
+
+As presidents and members of congress are almost always fundraising and campaigning for the next election, the president is mainly going to address his strengths and accomplishments during the address while attacking or downplaying those of the other party.  As such, we see only the most current topics discussed during the SOTU addresses to the president can attempt to energize his base of supporters while attempting to coerce members of the other party or independents to vote for him in the future.
+
+### Problem Statement
+
+This project investigates some of the themes and trends that exist in each SOTU while comparing presidencies to the year of the speech to the party of the president.
+
+##Data Description, Reading in Data, and Data Preparation
+
+This data set comes prebuilt into R with the package called "sotu".  It has 236 SOTU addresses in it.  The package contains the speech text as well as the metadata involving year of the speech, years of active presidency, party of speech, and SOTU type.  Only the speech text was taken from this package and all other variables used in the analysis were derived by hand throughout (to practice additional coding skills).  Note: George H. W. Bush is referred throughout this report as Bush where George W. Bush is referred to as BushW in the code or Bush 43 in the report.
+
+First, all the packages used need to be loaded.
+```{r, warning=FALSE, message=FALSE, results='hide'}
+
+library(rvest)
+library(lexRankr)
+library(readr)
+library(NLP)
+library(sotu)
+library(tidyr)
+library(tidytext)
+library(tidyverse)
+library(tidyselect)
+library(topicmodels)
+library(lsa)
+library(reshape2)
+library(quanteda)
+library(stm)
+```
+
+Next, I created the subsetted data set used in the project from the sotu package in R, using the addresses from 1982 to 2016, 35 in total with five presidents.  Most of the analysis used in this report looks at individual words.  However, individual words are not always helpful because they can lose their context when tokenized.  The words "health" and "care" have individual meanings but not typically the same meaning when they are combined to create the phrase "health care". 
+
+I skimmed through a few of the addresses to see what two or three word phrases should be morphed into one word to help the analysis later.  After creating the initial list, I went back and added others later as I saw them pop up.
+
+```{r, warning=FALSE, message=FALSE}
+options(tibble.print_max = 50, tibble.print_min = 10)
+
+
+#Take the data from the sotu dataset and select the last 35 year's worth of speeches
+
+project_sotu <- sotu_text[202:236]
+
+
+#Combine all 2-3 long common phrases into one "word" to better perform the later analysis
+project_sotu <- tolower(project_sotu)
+project_sotu <- gsub("health care", "healthcare", project_sotu)
+project_sotu <- gsub("health-care", "healthcare", project_sotu)
+project_sotu <- gsub("economic recovery", "economic recovery", project_sotu)
+project_sotu <- gsub("tax increase ", "taxincrease ", project_sotu)
+project_sotu <- gsub("tax decrease", "taxdecrease", project_sotu)
+project_sotu <- gsub("government spending", "governmentspending", project_sotu)
+project_sotu <- gsub("renewable energy", "renewableenergy", project_sotu)
+project_sotu <- gsub("war on terror", "waronterror", project_sotu)
+project_sotu <- gsub("big government", "biggovernment", project_sotu)
+project_sotu <- gsub("small business", "smallbusiness", project_sotu)
+project_sotu <- gsub("small-business", "smallbusiness", project_sotu)
+project_sotu <- gsub("violent crime", "violentcrime", project_sotu)
+project_sotu <- gsub("gulf war", "gulfwar", project_sotu)
+project_sotu <- gsub("social security", "socialsecurity", project_sotu)
+project_sotu <- gsub("federal deficit", "deficit", project_sotu)
+project_sotu <- gsub("federal debt", "federaldebt", project_sotu)
+project_sotu <- gsub("national debt", "federaldebt", project_sotu)
+project_sotu <- gsub("middle class", "middleclass", project_sotu)
+project_sotu <- gsub("working families", "workingfamilies", project_sotu)
+project_sotu <- gsub("blue collar", "bluecollar", project_sotu)
+project_sotu <- gsub("north korea", "northkorea", project_sotu)
+project_sotu <- gsub("global warming", "globalwarming", project_sotu)
+project_sotu <- gsub("climate change", "climatechange", project_sotu)
+project_sotu <- gsub("united states military", "military", project_sotu)
+project_sotu <- gsub("september the 11th", "9/11", project_sotu)
+project_sotu <- gsub("supreme court", "supremecourt", project_sotu)
+project_sotu <- gsub("wall street", "wallstreet", project_sotu)
+project_sotu <- gsub("tax cuts", "taxcuts", project_sotu)
+project_sotu <- gsub("gun control", "guncontrol", project_sotu)
+project_sotu <- gsub("middle east", "middleeast", project_sotu)
+project_sotu <- gsub("health insurance", "healthinsurance", project_sotu)
+
+#I wanted job and jobs to become one word.  But if I substituted job for jobs, there turned up many instances of jobss. 
+# So I turned all jobs into job, then turned them all back into jobs.
+project_sotu <- gsub("jobs", "job", project_sotu)
+project_sotu <- gsub("job", "jobs", project_sotu)
+
+# Get rid of the \n in the text document which is given at each line break of text
+project_sotu <- gsub("\n", " ", project_sotu)
+
+ #Get rid of \" which exist at multiple points throughout the documents
+project_sotu <- gsub('\\\"', " ", project_sotu)
+
+
+```
+
+Even though the following data was contained in the metadata section of the sotu package, I created my own vectors of president names, party, and year just to practice my for loop and binding skills.  
+
+```{r, warning=FALSE, message=FALSE}
+
+President <- c( "Reagan", "Reagan", "Reagan", "Reagan", "Reagan", "Reagan", "Reagan", 
+                "Bush", "Bush", "Bush", "Bush", 
+                "Clinton", "Clinton", "Clinton","Clinton", "Clinton", "Clinton", "Clinton", "Clinton",
+                "BushW", "BushW", "BushW", "BushW", "BushW", "BushW", "BushW", "BushW",
+                "Obama", "Obama", "Obama", "Obama", "Obama", "Obama", "Obama", "Obama")
+
+
+
+Party <- c( "Republican", "Republican", "Republican", "Republican", "Republican", "Republican", "Republican", 
+            "Republican", "Republican", "Republican", "Republican",
+            "Democrat", "Democrat", "Democrat", "Democrat", "Democrat", "Democrat", "Democrat", "Democrat",
+            "Republican", "Republican", "Republican", "Republican", "Republican","Republican", "Republican", "Republican",
+            "Democrat", "Democrat", "Democrat", "Democrat", "Democrat", "Democrat","Democrat", "Democrat")
+
+year <- c()
+for (i in 1982:2016){
+  year <- c(year,i)
+  i <- i + 1
+}
+```
+
+The next step was to create a tibble from scratch and insert all texts into it while also creating the additional variables desired (president, party, and year).
+
+```{r, warning=FALSE, message=FALSE}
+speech_tidy <- tibble:: tibble()
+
+# For loop created which adds to the speech_tidy tibble by adding to
+# the columns President, Party, Year of Speech, and unnests the documents by word.
+for(i in seq_along(project_sotu)) {
+  
+  clean <- tibble::tibble(speech1 = base::seq_along(project_sotu[i]),
+                          text = project_sotu[i]) %>%
+    dplyr::mutate(Pres = President[i]) %>%
+    dplyr::mutate(Part = Party[i])%>%
+    tidytext::unnest_tokens(word, text) %>%
+    dplyr::mutate(YearOfSpeech = year[i]) %>%
+    dplyr::select(YearOfSpeech, dplyr::everything())
+  
+  speech_tidy<- base::rbind(speech_tidy, clean)
+}
+# Remove the column generated called "speech1"
+speech_tidy <- speech_tidy %>%
+              select(-speech1)
+
+# Assign levels to the speech_tidy based on year of speech
+speech_tidy$YearOfSpeech <- base::factor(speech_tidy$YearOfSpeech, levels = year)
+
+# rename the word column to textwords to avoid confusion later
+rename(speech_tidy, textwords = word)
+```
+
+After assigning each speech to a president, party, a year, and then tokenizing, we can begin to conduct the initial analysis of texts.
+
+# Methodology
+
+## Initial Analysis
+
+Some initial analysis that can be incredibly useful and helpful to understand the themes and trends of each address is by looking at word count.  If a president uses a given word a lot, that most likely means it is one of the themes of his address.  As such, this initial analysis looks at word frequency by each president, during each speech, and by political party using the TidyVerse piping in R. 
+
+In addition to the standard "stop words", I identified numerous others that required removal because they were not adding anything regarding insight into the addresses, plus every president used them frequently.  These are words like American, people, and government.  I took the standard stop word list and added 13 more words.
+
+```{r, warning=FALSE, message=FALSE}
+#Most of the speeches used the following words frequently.  Thus they screwed up the analysis because the top word in each speech was  like tonight, or American.  I removed all these so I could start to get a feel for the "true" words of each speech.
+
+extra_stop <- data.frame(c("american", "america", "people", "americans", "government",'congress','world','tonight','country','ve','time','don','ll', 'president'),
+                         c(rep('new',14)))
+names(extra_stop) <- c("word",'lexicon')
+
+new_stop_words <- rbind(stop_words,extra_stop)
+
+new_stop_words[1150:1163,1]
+
+```
+First thing I looked at after removing stop words was the most common word in each speech.  In eight of the speeches, jobs was the most common word.  Interestingly, this often occurred in years where we were in a economic building phase (most of the years of the Obama Presidency) and other select years when we were not engrossed in the Global War of Terror (GWOT) or the Cold War.  There are 37 entries in this output because the years 2004 and 2005 had a tie for the most common words.  
+
+```{r, warning=FALSE, message=FALSE}
+#This first one looks at the used words during each speech, by year, minus all the stop words.  We can see standard governmental terms exist
+# like health, jobs, budget.  The interesting one is century which Bill Clinton mentioned 40 times in 1999.
+speech_tidy %>%
+  dplyr::anti_join(new_stop_words) %>%
+  dplyr::group_by(YearOfSpeech)%>%
+  dplyr::count(word,sort = TRUE)%>%
+  dplyr::top_n(1)
+```
+
+Breaking it down by republicans and democrats, I wanted to see the most common words in each party to identify what each party typically talks about during the address.  The common words used by republicans is not terribly shocking and fairly standard for republican lingo.  Republicans often talk about increasing the strength and size of the military to protect us and our allies, maintain peace, and maintain our freedom.  The US was in the Cold War during Reagan's president and the GWOT during Bush 43's presidency, so it makes sense these are common words for the Republicans.    
+
+```{r, message=FALSE, warning=FALSE}
+#This next one looked as the most popular words said by Republican presidents across the 35 years.  It's clear Reagan and Bush 43 focused # of security, freedom, and budget, common themes that republicans often talk about.
+
+speech_tidy %>%
+  dplyr::anti_join(new_stop_words) %>%
+  dplyr::filter(Part == "Republican")%>%
+  dplyr::count(word,sort = TRUE)%>%
+  dplyr::top_n(20)
+
+```
+
+Before running the analysis, my instinct was the democrats, instead of talking about war, freedom, and the military, would more stereotypically talk about jobs, the middle class, and protecting services, like medicare and social security.  After the analysis, I was correct to say the democrats talked about the economy and jobs.  This makes sense for two reasons.  1) Democratic Party talking points often revolve around jobs and creating jobs for blue collar workers and the "middle class" of the United States.  2) Obama and Clinton, the two democrats in the project, largely had presidencies away from war.  Both had to deal with wars and conflicts like Iraq/ Afghanistan and the Balkans, respectively, but they were not the hot button issues primarily during their combined 16 years.  
+
+```{r, message=FALSE, warning=FALSE}
+#THis next ones look at democrats top 5 words.  Jobs and economy seem to be at the focus of their speeches.
+
+speech_tidy %>%
+  dplyr::anti_join(new_stop_words) %>%
+  dplyr::filter(Part == "Democrat")%>%
+  dplyr::count(word,sort = TRUE)%>%
+  dplyr::top_n(20)
+```
+
+The above outputs give a breakdown by party, but it is worthwhile to show the most popular 20 words visually.  What is interesting here is that even though there are 19 years worth of republican addresses and 16 democrat addresses, the republicans never use a word more than 200 times.  This may mean that either the republican speeches were shorter, the republicans used a broader set of words, or republicans addressed numerous different topics in their addresses while the democrats focused on some of the same areas.
+
+As a example, republicans say freedom the most with 190 instances followed by 165 instances of nation.  The democrats on the other hand use the words jobs 393 times followed by children 213 times.  We can see, based on the word frequency, where the presidents of each party typically guided their speeches.
+
+```{r, warning=FALSE, message=FALSE}
+
+# Next I looked plotted the 30 most common words among each party.  In general, they share a lot of the common words
+
+speech_tidy %>%
+  anti_join(new_stop_words) %>%
+  group_by(Part) %>%
+  count(word, sort = TRUE) %>%
+  top_n(30) %>%
+  ungroup() %>%
+  dplyr::mutate(YearOfSpeech = year[i]) %>%
+  mutate(YearOfSpeech = base::factor(YearOfSpeech, levels = year),
+         text_order = base::nrow(.):1) %>%
+  arrange(desc(word)) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, text_order), n, fill = Part)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Part, scales = "free_y") +
+  labs(x = "", y = "Frequency") +
+  coord_flip() +
+  theme(legend.position="none")
+
+```
+
+It warranted looking into the most popular words during a entire presidency.  Instead of gaining insight about the addresses as a whole or by party, analysis by each president can be very telling about the hot issues at the time as well as what the president thought was important to address at that time.
+
+As discussed previously, both Clinton and Obama were president when we, as a country, were attempting to build or rebuild our economy and grow the amount of jobs.  The most popular words in Bush 43's addresses almost all revolve around the wars in Iraq and Afghanistan by mentioning Iraq, freedom, and terrorists.  Reagan and Bush seemed to be the two presidents who blend their messaging between freedom and economy building.  They both were concerned with the Cold War but also the economic growth in the 80's revolving around trickle down economics.
+
+```{r message=FALSE, warning=FALSE}
+#This next one looks at the top 5 words by president
+
+speech_tidy %>%
+  dplyr::anti_join(new_stop_words) %>%
+  dplyr::group_by(Pres)%>%
+  dplyr::count(word, sort = TRUE)%>%
+  dplyr::top_n(5) %>%
+  print(n = nrow(.))
+```
+
+Combining the earlier analysis of key party words and the most popular words among each president necessitated the following section: what were each president's top 20 words?  First, an important thing to note is that the word frequency for Bush were much lower than all others, which is easily explained because he only has four years' worth of SOTU addresses.  In general, the popular words among each president follow some of the initial trends identified above.  Clinton and Obama largely talked about the economy and jobs as well as families/ homes and education.  It is not clear that for whatever reason, Clinton mentioned children 176 times during his eight addresses.  Obama had the majority of the mention of jobs, with 255 in his eight years.  Clearly, not only is it evident his presidency largely consisted of economic regrowth but he likely referred back to his job growth highlights with each successive address.
+
+Bush 43 talks a little bit about the economy (mainly in his 2001 SOTU before 9/11 occurred) but most of his words involve the military, freedom, and defense topics.  As noted previous, Reagan and Bush split their messages between discussing freedom and security in response to the Cold War but also their attempts to grow the US economy in the 80's. 
+
+```{r, message=FALSE, warning=FALSE}
+#Finally, this last one is a plot, by president, and their 20 most common words across all of their speeches.
+
+speech_tidy %>%
+  anti_join(new_stop_words) %>%
+  group_by(Pres) %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  dplyr::mutate(YearOfSpeech = year[i]) %>%
+  mutate(YearOfSpeech = base::factor(YearOfSpeech, levels = year),
+         text_order = base::nrow(.):1) %>%
+  arrange(desc(word)) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, text_order), n, fill = Pres)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Pres, scales = "free_y") +
+  labs(x = "", y = "Frequency") +
+  coord_flip() +
+  theme(legend.position="none")
+```
+
+## Topic modeling
+I next wanted to see what some of the topic model packages could provide based on the SOTU.  In some in-class examples, we saw distinct breaks in topics regarding tweets about the US Air Force.  The goal was to see if these packages could break the addresses into distinct and independent "categories".  My initial assessment is that, if the packages can do it, it will likely break the topics in the economy and the national security and perhaps one overlap category for additional items.
+
+For both the LSA, LDA, and STM topic models, I ran them with two, three, and four topics to see what results they generated.  Similar the multivariate method, factor analysis, there is a human aspect of identifying the number of factors, or topics in this case, that best explain the data.  Thus, one has to use a bit of trial and error to see what works out best.  In all three of the topic modeling methods, none of them seems to create any great separation between the topics, whether I used two, three, or four topics.  Even though I ran each method with two to four topics, for the brevity of this report, I show the bleed over of topics using three topics for each method.  
+
+For LSA, there is very poor separation among the topics.  The first topic seems to revolve around general SOTU and political areas like the economy and national defense.  The second has a blend of national defense, the economy, and social topics like healthcare and education.  The third seems to mainly focus on the wars in Iraq and Afghanistan but has some other areas in it at well.
+
+```{r, warning=FALSE, message=FALSE, results='hide'}
+#Create tibble to run LSA
+
+speech_lsa <- tibble:: tibble()
+
+for(i in seq_along(project_sotu)) {
+  
+  clean <- tibble::tibble(speech1 = base::seq_along(project_sotu[i]),
+                          text = project_sotu[i]) %>%
+    dplyr::mutate(Pres = President[i]) %>%
+    dplyr::mutate(Part = Party[i])%>%
+    # tidytext::unnest_tokens(word, text) %>%
+    dplyr::mutate(YearOfSpeech = year[i]) %>%
+    dplyr::select(YearOfSpeech, dplyr::everything())
+  
+  speech_lsa<- base::rbind(speech_lsa, clean)
+  
+}
+
+speech_lsa <- speech_lsa %>%
+  select(-speech1)
+
+speech_lsa$YearOfSpeech <- base::factor(speech_lsa$YearOfSpeech, levels = year)
+rename(speech_lsa, textwords = text)
+
+#I need to set up my tibble to put it in the form for a term document matrix.
+
+speech_lsa_dfm <- speech_lsa%>%
+  unnest_tokens(word,text)%>%
+  anti_join(new_stop_words)%>%
+  add_count(word, sort = TRUE)
+
+
+dfm_speech_lsa <- speech_lsa_dfm %>%
+  cast_dfm(YearOfSpeech,word,n)
+
+# Set up variable to run LSA.
+MyLSA <- lsa(dfm_speech_lsa, dims = 3)
+
+MyLSA$dk <- abs(MyLSA$dk)
+
+```
+
+Below are the three topics generated from LSA.
+```{r, message=FALSE, warning=FALSE}
+head(MyLSA$dk[order(-MyLSA$dk[,1]),],10)
+
+
+head(MyLSA$dk[order(-MyLSA$dk[,2]),],10)
+
+
+head(MyLSA$dk[order(-MyLSA$dk[,3]),],10)
+```
+
+Using LDA this time produced similar "blurry"" results to LSA.  There is poor separation in the topics.  The first deals with the economy and social issues while the second has economy and national defense mostly.  The third appears to be a catch all for other words.  
+
+
+```{r, warning=FALSE, message=FALSE}
+
+MyLDA <- LDA(dfm_speech_lsa, k = 3, control = list(seed = 1234))
+
+topics_speech_LDA <- tidy(MyLDA, matrix = "beta")
+
+
+speech_top_terms <- topics_speech_LDA %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+speech_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+
+```
+
+
+After running LSA and LDA analysis, I used a different topic modeling package presented in class called Structural Topic Modeling.  After LSA and LDA produced mostly indistinguishable results, I imagine STM will do something similar but wanted to check regardless.  Like LSA and LDA, I used two, three, and four topics to see which best explained the data.  None performed terribly well to split the data, so I stuck with three topics.
+
+STM returned similar mixed results.  The first topic discusses most the economy but has a little bit about the war and national defense.  The second topic is a blend of health care and national defense.  The third is a blend of many topics including children, social ideas, and the economy.
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+#Next I am going to do STM based on the SOTUs.  
+speech_tidy_model <- tibble:: tibble()
+
+for(i in seq_along(project_sotu)) {
+  
+  clean <- tibble::tibble(speech1 = base::seq_along(project_sotu[i]),
+                          text = project_sotu[i]) %>%
+    dplyr::mutate(Pres = President[i]) %>%
+    dplyr::mutate(Part = Party[i])%>%
+   # tidytext::unnest_tokens(word, text) %>%
+    dplyr::mutate(YearOfSpeech = year[i]) %>%
+    dplyr::select(YearOfSpeech, dplyr::everything())
+  
+  speech_tidy_model<- base::rbind(speech_tidy_model, clean)
+  
+  
+}
+
+#Remove created column called speech1
+speech_tidy_model <- speech_tidy_model %>%
+  select(-speech1)
+
+speech_tidy_model$YearOfSpeech <- base::factor(speech_tidy_model$YearOfSpeech, levels = year)
+rename(speech_tidy_model, textwords = text)
+
+#I need to set up my tibble to put it in the form for a document frequency matrix.
+
+speech_topic_model_Tidy <- speech_tidy_model%>%
+                            unnest_tokens(word,text)%>%
+                            anti_join(new_stop_words)%>%
+                            add_count(word, sort = TRUE)
+
+
+dfm_speech <- speech_topic_model_Tidy %>%
+  cast_dfm(YearOfSpeech,word,n)
+
+#Now using my document frequency matrix, I can plug that into the stm (structual topic model) function in the STM package to create my topic model and look at the individual topics.
+
+
+topic_model3 <- stm(dfm_speech, K = 3, init.type = "LDA")
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+topic_model3 <- tidy(topic_model3)
+
+topic_model3 %>%
+  group_by(topic) %>%
+  top_n(20) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
+
+```
+
+Ultimately, none of the topic modeling methods performed terribly well on the SOTU addresses.  My best explanation is that each SOTU address constantly blends discussion about national defense, social issues, and the economy throughout each speech, not to mention combining these major topics in each portion of the speech.  For example, Obama may have discussed something like ending the war in Iraq so that money can be shifted towards creating jobs and funding social programs.  Sentences like this that combine multiple topics would likely make it hard for a program to find strong separation between topics.  
+
+## Sentiment Analysis
+
+Initially, I though sentiment analysis would show which presidents would use more positive language than others and vice versa.  However, as I thought about it further and as the analysis will show, presidents very rarely will talk about negative ideas in their addresses.  As mentioned before, presidents want to highlight their accomplishments and talk about how their agendas are best, so they are going to use mainly positive words.
+
+Since presidents want to use positive words, I decided to conduct sentiment analysis, by president by speech.  For example, the following sentiment analysis shows net positive words used by Clinton in his first through his eighth speech to see the net amount of positive words used as the years passed.  This was done for all presidents.  My thought was that the net positive sentiments will increase as the length of the presidency increases so the president can boast about his accomplishments while in office.
+
+```{r, message=FALSE, warning=FALSE}
+# Set up vector that identifies the which speech it is for the president
+numspeech <- c(2,3,4,5,6,7,8,1,2,3,4,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8)
+
+proj_sent <- tibble:: tibble()
+
+for(i in seq_along(project_sotu)) {
+  
+  clean <- tibble::tibble(speech1 = base::seq_along(project_sotu[i]),
+                          text = project_sotu[i]) %>%
+    dplyr::mutate(Pres = President[i]) %>%
+    dplyr::mutate(Part = Party[i])%>%
+    dplyr::mutate(speechnum = numspeech[i]) %>%
+    dplyr::mutate(YearOfSpeech = year[i]) %>%
+    tidytext::unnest_tokens(word, text) %>%
+    dplyr::select(YearOfSpeech, dplyr::everything())
+  proj_sent<- base::rbind(proj_sent, clean)
+  
+}
+
+proj_sent <- proj_sent %>%
+  select(-speech1)
+
+proj_sent$YearOfSpeech <- base::factor(proj_sent$YearOfSpeech, levels = year)
+
+#This does sentiment analysis by president, by speech number of theirs
+
+proj_sent_plot <- proj_sent %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(Pres,index = speechnum, sentiment)%>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) 
+
+ggplot(proj_sent_plot, aes(index, sentiment, fill = Pres)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~Pres, ncol = 2, scales = "free_x")
+
+```
+Using sentiment analysis yields a couple interesting results but nothing earth-shattering.  My theory that the number of positive words would increase was mostly wrong with the exception of Clinton.  One interesting thing is that for Bush 43's second and third speech, these two occurred after September 11th and around the beginning of the Afghanistan and Iraq wars, thus making sense he had less positive words.  Additionally, in the middle of Reagan's presidency, when he was really pushing his trickle down economics policy, the net amount of positive words increases.  Finally, it appears as though Reagan, Bush 43, and Obama all had higher than average net positive words around their 4th and 5th years in office, the addresses leading up to and immediately after reelection.  
+
+## Word Cloud
+Word clouds, while they typically don't have a analytic effect, can be useful to visualize data and word frequency.  As a final note to this project, I thought it might be worthwhile to try a couple different types of word clouds.  The first takes Bush 43's first SOTU address in 2001 and Obama's last address in 2016 .  These share a lot of the same words among in these speeches, which makes sense as both of them were focusing on the economy at this time.  Bush 43 was focusing on the economic decline coming out of the technology bubble burst and Obama was still still dealing with the effects of the housing market collapse in 2008.  
+
+```{r, message=FALSE, warning=FALSE}
+library(wordcloud)
+library(tm)
+library(xtable)
+
+Bush_Obama <- project_sotu[c(20,35)]
+BOyear <- c(2001,2016)
+Bush_Obama <- cbind(Bush_Obama,BOyear)
+Bush_Obama <- as.data.frame(Bush_Obama)
+
+colnames(Bush_Obama)<- c('speechtext','year')
+
+
+
+docsBO <- Corpus(VectorSource(Bush_Obama$speechtext)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(tolower)  %>%
+  tm_map(removeWords, new_stop_words$word) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(PlainTextDocument)
+
+tdmBO <- TermDocumentMatrix(docsBO) %>%
+  as.matrix()
+colnames(tdmBO) <- c("Bush","Obama")
+
+
+bushsotu <- as.matrix(tdmBO[,1])
+bushsotu <- as.matrix(bushsotu[order(bushsotu, decreasing=TRUE),])
+
+
+obamasotu <- as.matrix(tdmBO[,2])
+obamasotu <- as.matrix(obamasotu[order(obamasotu, decreasing=TRUE),])
+
+par(mfrow=c(1,2))
+#Create word cloud of Bush speech
+wordcloud(rownames(bushsotu), bushsotu, min.freq =5, scale=c(.9, 1.5), 
+          random.order = FALSE, random.color = FALSE, 
+          colors= c("red1","red2","red3","red"))
+
+#Create word cloud of Obama speech
+wordcloud(rownames(obamasotu), obamasotu, min.freq =5, scale=c(.9, 1.5), 
+          random.order = FALSE, random.color = FALSE, 
+          colors= c("blue1","blue2","blue3","blue"))
+
+```
+
+
+I then created a comparison word cloud to put these two speeches together to look at differences in the key words.
+```{r, message=FALSE, warning=FALSE}
+
+par(mfrow=c(1,1))
+comparison.cloud(tdmBO, random.order=FALSE, colors = c("red2","blue2"),
+                 title.size=2, max.words=400)
+
+
+```
+As another word cloud, I decided to look at Bush 43 and Obama when they were more focused on the wars in Iraq and Afghanistan.  Therefore, I ran the same word clouds but used Bush 43's address in 2003 after September 11th and leading up to the war in Iraq and Obama's speech in 2008 when he talked continually about removing the troops from Iraq.  It is interesting how the themes and common words in each president's speech change from year to year depending on what the hot button issues at that time are.
+
+```{r, message=FALSE, warning=FALSE}
+Bush_Obama2 <- project_sotu[c(22,27)]
+BOyear <- c(2003,2008)
+Bush_Obama2 <- cbind(Bush_Obama2,BOyear)
+Bush_Obama2 <- as.data.frame(Bush_Obama2)
+
+colnames(Bush_Obama2)<- c('speechtext','year')
+
+
+
+docsBO2 <- Corpus(VectorSource(Bush_Obama2$speechtext)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(tolower)  %>%
+  tm_map(removeWords, new_stop_words$word) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(PlainTextDocument)
+
+tdmBO2 <- TermDocumentMatrix(docsBO2) %>%
+  as.matrix()
+colnames(tdmBO2) <- c("Bush","Obama")
+
+bushsotu2 <- as.matrix(tdmBO2[,1])
+bushsotu2 <- as.matrix(bushsotu2[order(bushsotu2, decreasing=TRUE),])
+
+obamasotu2 <- as.matrix(tdmBO2[,2])
+obamasotu2 <- as.matrix(obamasotu2[order(obamasotu2, decreasing=TRUE),])
+
+
+par(mfrow=c(1,2))
+#Create word cloud of Bush speech
+wordcloud(rownames(bushsotu2), bushsotu2, min.freq =5, scale=c(.9, 1.5), 
+          random.order = FALSE, random.color = FALSE, 
+          colors= c("red1","red2","red3","red"))
+
+#Create word cloud of Obama speech
+wordcloud(rownames(obamasotu2), obamasotu2, min.freq =5, scale=c(.9, 1.5), 
+          random.order = FALSE, random.color = FALSE, 
+          colors= c("blue1","blue2","blue3","blue"))
+
+```
+
+
+I then took the Bush 2003 speech and Obama 2008 speech and put them into a comparision cloud again.  Again, this really serves no analytic purpose, but it is an interesting visualization of some of the key points and messages of each speech.
+```{r, warning=FALSE, message=FALSE}
+par(mfrow=c(1,1))
+comparison.cloud(tdmBO2, random.order=FALSE, colors = c("red2","blue2"),
+                 title.size=2, max.words=400)
+
+
+
+```
+
+
+# Findings and Conclusions
+
+The goal of this project was to see what trends and themes exist in 35 of the most recent SOTU addresses by using various text mining techniques instead of reading all 35 documents fully.  The initial analysis which used frequency of words and sliced the data in different ways to see what each president and party tended to focus on.  Of all of the types of analysis, this proved to be the most interesting and telling.  The topic modeling methods provided very little in terms of insight.  The sentiment analysis, while enjoyable to perform, yielded a couple interesting points but nothing too important.
+
+One of the goals of this project was to take a sample of speeches, train a model of them, and see if the model was able to predict the president or party based on the validation set of speeches.  I was unable to get this to work and finalize this portion of the analysis.  Given more time, the next step I would take in this project would be to make the classification model(s) work to see how well they can predict the president of a speech given his other speeches.  This may be telling about not only about what a given president says but also the manner in which he says it.
