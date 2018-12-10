@@ -1,0 +1,563 @@
+---
+title: "Text Mining Analysis of the Unabomber Manifesto"
+author: "Troy St Peter"
+date: "December 10, 2018"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+## Abstract
+
+  From 1978 to 1995, Theodore John Kaczynski, also known as the Unabomber, terrorized the United States with a countrywide bombing campaign. The gravity of the bombings escalated over time, ultimately taking three lives and injuring twenty-eight people involved in the use of technology, primarily those working at universities and airports. The Unabomber was captured as a result of linguistic analysis efforts from the FBI that established the suspect's age and location and connected writings confirmed to be written by Kaczynski to those written by the Unabomber, including a manifesto printed in the Washington Post [(1)](https://www.npr.org/2017/08/22/545122205/fbi-profiler-says-linguistic-work-was-pivotal-in-capture-of-unabomber). The Unabomber case showed the potential for the use natural language processing techniques in the criminal investigation field. This analysis seeks to use modern text mining techniques on the manifesto to see what information can be gained. 
+
+## Problem Background
+
+  Linguistic techniques were integral in the capture of the Unabomber in 1996 after a lengthy FBI investigation. He began the bombings in 1978 and started sending letters to the media and victims in the 1990s. The FBI used linguistic techniques on these letters to profile the criminal. Among other characteristics, the FBI was able to pinpoint the suspect's age and geographic location. From his writing, it was evident that he was not the traditional terrorist. The Unabomber holds a bachelor's degree from Harvard and a master's degree from Michigan. His writings were ultimately his downfall when he chose to submit a 35,000 word manifesto titled *Industrial Society and Its Future* to the New York Times and Washington Post for printing under the threat that the bombings would continue if his wishes were ignored. This tipped the investigation over the edge because the Unabomber had many unique quirks to his writing. People such as his own brother who recognized simularities between the Unabomber's manifesto and past essays and letters from Kaczynski provided tips to the FBI, who used linguistic analysis to confirm that the documents were all written by the same person [(2)](https://abcnews.go.com/US/unabomber-ted-kaczynskis-brother-sister-law-recall-turning/story?id=36845028). The use of linguistic techniques in this case is the inspiration for this project. Text mining techniques have improved substantially over the years. The FBI methods to utilize language in their investigations are not openly available, but open-source text mining software is accessible to other firms like news outlets. If this case happened today, what kind of techniques could be used and what information could be gained about the suspect and his motives?
+
+## Methodology
+
+  This section describes the process used to import and clean the data and the techniques used to gain insight from the Unabomber's manifesto. The techniques utilized are document summarization using the `lexRankr` package, Latent Dirichlet allocation (LDA) using the `topicmodels` package and sentiment analysis using the `sentimentr` package. The following packages will all be used in this analysis.
+
+```{r}
+pacman::p_load(XML,
+               quanteda,
+               text2vec,
+               tokenizers,
+               qdapRegex,
+               magrittr,
+               wordcloud,
+               tidytext,
+               ggplot2,
+               topicmodels,
+               dplyr,
+               tidyr,
+               sentimentr,
+               tm,
+               lexRankr,
+               ldatuning,
+               plotly,
+               stringr)
+``` 
+
+### Data Description
+
+  The manifesto was originally printed by the Washington Post, who still hosts the document on their website. The text was imported into R and cleaned using the code below which starts with defining the file location. Since the text is pulled from a website, an internet connection is required. Some of the necessary cleaning steps were removing unncessary characters and terms like "etc." that can cause issues when separating the data into words and sentences.
+
+```{r}
+url  <- 'http://www.washingtonpost.com/wp-srv/national/longterm/unabomber/manifesto.text.htm'
+doc.html = htmlTreeParse(url, useInternal = TRUE)
+doc.text = unlist(xpathApply(doc.html, '//p', xmlValue))
+doc.text = gsub('\\n', ' ', doc.text)
+doc.text = gsub('Â', '', doc.text)
+doc.text = gsub('etc.', '', doc.text)
+doc.text = paste(doc.text, collapse = ' ') # join character vector into a single string
+```
+
+  The text was also separated into the 25 titled sections of the manifesto. The sections are listed below in order of appearance. This division of the data into sections was necessary to use LDA, which requires a document-term matrix as an input. This process was labor-intensive and included using the `rm_between` function to pull the text between section titles. The entirety of the code is available in the Appendix. 
+
+```{r, echo = FALSE}
+introduction <- rm_between(doc.text, 'Introduction', 'THE PSYCHOLOGY OF MODERN LEFTISM', extract=TRUE)[[1]]
+the_psychology_of_modern_leftism <- rm_between(doc.text,'THE PSYCHOLOGY OF MODERN LEFTISM','FEELINGS OF INFERIORITY', extract=TRUE)[[1]]
+feelings_of_inferiority <- rm_between(doc.text,'FEELINGS OF INFERIORITY','OVERSOCIALIZATION', extract=TRUE)[[1]]
+oversocialization <- rm_between(doc.text,'OVERSOCIALIZATION','THE POWER PROCESS', extract=TRUE)[[1]]
+the_power_process <- rm_between(doc.text,'THE POWER PROCESS','SURROGATE ACTIVITIES', extract=TRUE)[[1]]
+surrogate_activities <- rm_between(doc.text,'SURROGATE ACTIVITIES','AUTONOMY', extract=TRUE)[[1]]
+autonomy <- rm_between(doc.text,'AUTONOMY','SOURCES OF SOCIAL PROBLEMS', extract=TRUE)[[1]]
+sources_of_social_problems <- rm_between(doc.text,'SOURCES OF SOCIAL PROBLEMS','DISRUPTION OF THE POWER PROCESS IN MODERN SOCIETY', extract=TRUE)[[1]]
+disruption_of_the_power_process_in_modern_society <- rm_between(doc.text,'DISRUPTION OF THE POWER PROCESS IN MODERN SOCIETY','HOW SOME PEOPLE ADJUST', extract=TRUE)[[1]]
+how_some_people_adjust <- rm_between(doc.text,'HOW SOME PEOPLE ADJUST','THE MOTIVES OF SCIENTISTS', extract=TRUE)[[1]]
+the_motives_of_scientists <- rm_between(doc.text,'THE MOTIVES OF SCIENTISTS','THE NATURE OF FREEDOM', extract=TRUE)[[1]]
+the_nature_of_freedom <- rm_between(doc.text,'THE NATURE OF FREEDOM','SOME PRINCIPLES OF HISTORY', extract=TRUE)[[1]]
+some_principles_of_history <- rm_between(doc.text,'SOME PRINCIPLES OF HISTORY','RESTRICTION OF FREEDOM IS UNAVOIDABLE IN INDUSTRIAL SOCIETY', extract=TRUE)[[1]]
+restriction_of_freedom_is_unavoidable_in_industrial_society <- gsub(pattern = "  THE 'BAD' PARTS", "", rm_between(doc.text,'RESTRICTION OF FREEDOM IS UNAVOIDABLE IN INDUSTRIAL SOCIETY','OF TECHNOLOGY', extract=TRUE)[[1]])
+the_bad_parts_of_technology_cannot_be_separated_from_the_good_parts <- gsub(pattern = "'GOOD' PARTS  ", "", rm_between(doc.text,'FROM THE','TECHNOLOGY', extract=TRUE)[[1]])
+technology_is_a_more_powerful_social_force_than_the_aspiration_for_freedom <- gsub(pattern = "FOR  FREEDOM  ", "", rm_between(doc.text,'ASPIRATION','SIMPLER SOCIAL', extract=TRUE)[[1]])
+simpler_social_problems_have_proved_intractable <- rm_between(doc.text,'SIMPLER SOCIAL PROBLEMS HAVE PROVED INTRACTABLE','REVOLUTION IS EASIER THAN REFORM', extract=TRUE)[[1]]
+revolution_is_easier_than_reform <- rm_between(doc.text,'REVOLUTION IS EASIER THAN REFORM','CONTROL OF HUMAN BEHAVIOR', extract=TRUE)[[1]]
+control_of_human_behavior <- rm_between(doc.text,'CONTROL OF HUMAN BEHAVIOR','HUMAN RACE AT A CROSSROADS', extract=TRUE)[[1]]
+human_race_at_a_crossroads <- rm_between(doc.text,'HUMAN RACE AT A CROSSROADS','THE FUTURE', extract=TRUE)[[1]]
+the_future <- rm_between(doc.text,'THE FUTURE','STRATEGY', extract=TRUE)[[1]]
+strategy <- rm_between(doc.text,'STRATEGY','TWO KINDS OF TECHNOLOGY', extract=TRUE)[[1]]
+two_kinds_of_technology <- rm_between(doc.text,'TWO KINDS OF TECHNOLOGY','THE DANGER OF LEFTISM', extract=TRUE)[[1]]
+the_danger_of_leftism <- rm_between(doc.text,'THE DANGER OF LEFTISM','231.', extract=TRUE)[[1]]
+final_note <- rm_between(doc.text,'average bourgeois.','Notes', extract=TRUE)[[1]]
+
+titles <- c("Introduction", 
+            "The Psychology of Modern Leftism", 
+            "Feelings of Inferiority",
+            "Oversocialization", 
+            "The Power Process", 
+            "Surrogate Activities",
+            "Autonomy",
+            "Sources of Social Problems",
+            "Disruption of the Power Process in Modern Society",
+            "How Some People Adjust",
+            "The Motives of Scientists",
+            "The Nature of Freedom",
+            "Some Principles of History",
+            "Restriction of Freedom Is Unavoidable in Industrial Society",
+            "The Bad Parts of Technology Cannot Be Separated from the Good Parts",
+            "Technology Is a More Powerful Social Force Than the Aspiration for Freedom",
+            "Simpler Social Problems Have Proved Intractable",
+            "Revolution Is Easier Than Reform",
+            "Control of Human Behavior",
+            "Human Race at a Crossroads",
+            "The Future",
+            "Strategy",
+            "Two Kinds of Technology",
+            "The Danger of Leftism",
+            "Final Note")
+```
+
+```{r}
+titles
+```
+
+  When each section of the text has been extracted, they can be combined into a single list for ease of use with other packages.
+
+```{r}
+section <- list(introduction,the_psychology_of_modern_leftism,feelings_of_inferiority,oversocialization,the_power_process,surrogate_activities,autonomy,sources_of_social_problems,disruption_of_the_power_process_in_modern_society,how_some_people_adjust,the_motives_of_scientists,the_nature_of_freedom,some_principles_of_history,restriction_of_freedom_is_unavoidable_in_industrial_society,the_bad_parts_of_technology_cannot_be_separated_from_the_good_parts,technology_is_a_more_powerful_social_force_than_the_aspiration_for_freedom,simpler_social_problems_have_proved_intractable,revolution_is_easier_than_reform,control_of_human_behavior,human_race_at_a_crossroads,the_future,strategy,two_kinds_of_technology,the_danger_of_leftism,final_note)
+```
+
+  With the data imported and cleaned, measures like raw word counts can provide an overview of the manifesto. The `text2vec` package is used to show how many times each word appears throughout the entire manifesto and in how many different sections the word appears. Stop words such as "a" and "the" are ignored.
+
+```{r}
+t2v_tokens = section %>% 
+  tolower %>% 
+  tokenize_words()
+t2v_itoken = itoken(t2v_tokens, progressbar = FALSE)
+(t2v_vocab = create_vocabulary(t2v_itoken,stopwords = stop_words[[1]]))
+tail(t2v_vocab,10)
+```
+
+  The ten words used most often are related to society and technology. All of these words are used in a majority of the manifesto sections. 
+
+  Another common measure are *term frequency-inverse document frequency*, or *tf-idf*, values. This measure identifies the hardest hitting words in the text using *tf*, the number of times each term appears in a document, and *idf*, which concerns the number of times a term appears across all documents. The *tf-idf* measure is useful because higher valued words are used often in a document, but not very often throughout all the documents. The *tf* measure is usually just the number of times each term appears in each document, but the value is sometimes scaled logarithmically because some documents are longer than others. In this project, *tf* is found by dividing the count of term $t$ in document $d$ by the number of words in document $d$. The *idf* value is calculated as follows. In the formula, $N$ is the total number of documents and $n_t$ is the number of documents that contain term $t$ [(3)](https://en.wikipedia.org/wiki/Tf-idf). 
+
+$$
+\mbox{idf}(t,D) = \log\left(\frac{N}{n_{t}}\right)
+$$
+  
+  The *tf* and *idf* values are then multiplied to form the *tf-idf* value.
+  
+$$
+\mbox{tf-idf}(t,d,D) = \mbox{tf}(t,d) \cdot \mbox{idf}(t,D)
+$$
+  
+  The code below forms a tidy text dataset of words from the manifesto and calculates the *tf-idf* values using the term frequencies in each section and the total number of terms in each section. 
+
+```{r}
+una_tidy <- tibble::tibble()
+
+for(i in seq_along(titles)) {
+  clean <- tibble::tibble(text = section[[i]]) %>%
+    tidytext::unnest_tokens(word, text) %>%
+    dplyr::mutate(section = titles[i]) %>%
+    dplyr::select(section, dplyr::everything())
+  una_tidy <- base::rbind(una_tidy, clean)
+}
+
+head(una_tidy, 10)
+
+# Find the number of times a term appears in each section
+section_words <- una_tidy %>%
+  count(section, word, sort = TRUE) %>%
+  anti_join(stop_words) %>%
+  ungroup()
+
+# Find the number of terms in each section
+document_words <- section_words %>%
+  group_by(section) %>%
+  summarise(total = sum(n))
+
+# Merge the two tables
+section_words <- left_join(section_words, document_words)
+head(section_words, 10)
+
+# Calculating tf_idf values
+section_words <- section_words %>%
+  bind_tf_idf(word, section, n)
+
+# Identify the highest tf-idf values
+section_words %>%
+  arrange(desc(tf_idf))
+```
+
+  These are some of the most important words in the manifesto according to the *tf-idf* measure. It is particularly interesting for a word like "ethics" to be significant in a criminal's manifesto. The term "leftism" took the top spot. Even though this concept is discussed throughout the text as shown in subsequent analysis, the author more often uses the terms leftist and leftists which inflated the *tf-idf* value for leftism.
+
+  Another easy way to visualize word use throughout a document are word clouds. The words used most often in a document, in this case system, people and society, are larger in the word cloud. The input to the function is the tidy dataset formed in the first step above.
+
+```{r}
+una_tidy %>%
+   anti_join(stop_words) %>%
+   count(word) %>%
+   with(wordcloud(word, n, max.words = 50, scale = c(3, 0.5), colors=palette()))
+```
+
+  It is also possible to visualize the most frequent words in each section. Since there are 25 sections total, only three are presented below: "Control of Human Behavior," "Sources of Social Problems," and "Strategy." All of the plots are available in the Appendix.
+
+```{r}
+subset(una_tidy, section == "Control of Human Behavior" | section == "Sources of Social Problems" | section == "Strategy") %>%
+  anti_join(stop_words) %>%
+  group_by(section) %>%
+  count(word, sort = TRUE) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(section = base::factor(section, levels = titles),
+         text_order = base::nrow(.):1) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, text_order), n, fill = section)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ section, scales = "free_y") +
+  labs(x = "",y = "") +
+  coord_flip() +
+  theme(legend.position="none",strip.text = element_text(size=7))
+```
+
+### Analysis
+
+  The first method used in this project was document summarization using the `lexRank` function of the `lexRankr` package, which uses the PageRank algorithm made famous by Google. Document summarization is used to quickly learn the gist of a text. This package uses extractive document summarization, meaning it pulls important sentences directly from the text. The input to the function below is a character vector of text. The five most important sentences are extracted from the text.
+
+```{r}
+top_5 = lexRank(paste(section, collapse = ' '), docId = "create", n = 5, continuous = TRUE)
+# Displaying sentences in ordered of appearance
+order_of_appearance = order(as.integer(gsub("_","",top_5$sentenceId)))
+ordered_top_5 = top_5[order_of_appearance, "sentence"]
+paste(ordered_top_5, collapse = ' ')
+```
+
+  This output makes sense for the most part. It is evident that the Unabomber was not satisfied with modern society and its reliance on technology. He identifies people who are a drain on society in his opinion, including dropouts and welfare leeches. The only issue with the summary is the fourth sentence where the Unabomber discusses the outcome of a theoretical treatment probably described in prior sentences. Without further context, it is impossible to understand the meaning of the sentence and it is useless in the summary. The Unabomber clearly had issues with technology and certain groups of people which might be the main topics of the text. Using LDA can help confirm this hypothesis.
+
+  LDA is a method to extract the underlying topics of a text. Preferably, thousands of documents are used to train the model. In this case, only 25 documents (sections of the manifesto) are available which might limit the effectiveness of the method. The `LDA` function from the `topicmodels` package requires a document-term matrix. The traditional document-term matrix has each document listed in the rows and each unique term in the columns. The first chunk below forms the document-term matrix from the list of sections.
+
+```{r}
+una_dtm <- VectorSource(section) %>%
+           VCorpus() %>%
+           DocumentTermMatrix(control = list(removePunctuation = TRUE,
+                                             removeNumbers = TRUE,
+                                             stopwords = TRUE,
+                                             tokenize = 'MC'))
+
+inspect(una_dtm)
+```
+
+  As shown by the output, there are 3,593 unique terms throughout the 25 sections. Each value in the matrix is how many occurences of that term occur in that document. Document-term matrices can be formed with *tf-idf* weighting for use in LDA, but the `topicmodels` package prefers a document-term matrix with term-frequency weighting. 
+
+  One significant decision that needs to be made before running topic models is how many topics are to be extracted. This value is usually referred to as *k*. There are minimal formal methods for choosing *k*. Many analysts choose to iterate over many values of *k* and choose the value where the results make the most sense. In R, there is a package called `ldatuning` that consolidates four literary resources with differing ideas on choosing the best value for *k*. Each author has created a measure that is either minimized or maximized by the "best" value of *k*.
+
+```{r}
+number_of_topics <- FindTopicsNumber(una_dtm,
+                                     topics = seq(2, 30, 1), # Search for between 2 and 30 topics
+                                     metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+                                     method = "Gibbs",   
+                                     control = list(seed = 2017),
+                                     mc.cores = 1L,
+                                     verbose = TRUE)
+
+FindTopicsNumber_plot(number_of_topics) # Plotting the results
+```
+
+  According to these methods, there are apparently around 13 topics in the manifesto of only 35,000 words. The Deveaud metric was not helpful for this text. The presence of that many topics does not seem accurate, so the traditional method of iterating over multiple *k* values to find the results that make the most sense was used. The final value chosen for *k* was two.
+
+```{r}
+(una_lda <- LDA(una_dtm, k = 2, method = "Gibbs", control = list(seed = 2017)))
+```
+
+  Within the output, there are useful *beta* values that are the probabilities that a term relates each topic. In addition, the *gamma* values are the probabilities that a document is about each topic. There are multiple ways to interpret the *beta* results to define each of the topics. The first method of simply choosing the top 10 terms for each topic is shown below.
+  
+```{r, echo = FALSE}
+# This code is not shown in the knitted version. There was an issue with the LDA results being different when knitting so the beta and gamma values from the console-run model were saved and imported
+una_topics <- dget('betas.R')
+una_section_topics <- dget('gammas.R')
+```
+
+```{r, eval = FALSE}
+# Extract per-topic, per-term probabilities
+una_topics <- tidy(una_lda, matrix = "beta")
+```
+
+```{r}
+head(una_topics, 10)
+
+una_topic_words <- una_topics %>% 
+                   group_by(topic) %>% 
+                   top_n(10,beta) %>% 
+                   ungroup() %>% 
+                   arrange(topic,-beta)
+
+una_topic_words %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+  From this output, topic 1 seems to relate to industry and technology while topic 2 relates to people, mainly those called leftists. While these topics make sense based on the document summarization results, the presence of the term society in both topics is not ideal. There is another way to consider the *beta* values when forming the lists of topic words. In this method, the terms that offer the greatest spread in *beta* between topics are found. The log ratio is used because it makes the difference symmetrical such that $\beta_{2}$ being two times as large as $\beta_{1}$ results in a 1 and $\beta_{1}$ being twice as large results in a -1 [(4)](https://www.tidytextmining.com/topicmodeling.html#latent-dirichlet-allocatio). 
+
+```{r,warning=FALSE}
+beta_spread <- una_topics %>%
+               mutate(topic = paste0("topic", topic)) %>%
+               spread(topic, beta) %>%
+               filter(topic1 > .001 | topic2 > .001) %>%
+               mutate(log_ratio = log2(topic2 / topic1))
+
+top_10 <- beta_spread %>% top_n(10,log_ratio) 
+bottom_10 <- beta_spread %>% top_n(-10,log_ratio) 
+my_topics <- rbind(top_10,bottom_10)
+
+# Forming a plot of the topics
+my_topics$term <- reorder(x = my_topics$term, X = my_topics$log_ratio, FUN = sum)
+my_topics$color = "Topic 1"
+my_topics$color[my_topics$log_ratio>0] = "Topic 2"
+plot_ly(x = my_topics$log_ratio, y = my_topics$term, type = 'bar', orientation = 'h', color = my_topics$color) %>%
+    layout(xaxis = list(title = 'Log2 Ratio of Beta in Topic 1/Topic 2'))
+```
+
+  This method produced clearer results and limited the presence of words in both topics. Topic 1 includes words like revolution, technological, industrial and technology. Topic 2 includes words like leftist, leftists, leftism and individual. It is clear that topic 1 refers to the development of and increased reliance on technology in society. Topic 2 refers to a particular group of people called leftists by the Unabomber.
+
+  Using the *gamma* values, it is possible to informally check how well the model performed. This matrix includes the probabilities that each document is about each topic.
+
+```{r, eval = FALSE}
+# Extracting gamma values
+una_section_topics <- tidy(una_lda, matrix = "gamma")
+```
+
+The code below simply reformats the matrix of *gamma* values to be more easily understandable.
+
+```{r}
+una_section_topics
+
+# Forming and combining matrices representing probabilities for each topic
+gamma_topic1 <- una_section_topics[1:25,]
+names(gamma_topic1)[3] <- "gamma 1"
+gamma_topic2 <- una_section_topics[26:50,]
+names(gamma_topic2)[3] <- "gamma 2"
+(una_gammas <- cbind(gamma_topic1[,-2],gamma_topic2[,3]))
+```
+
+  The output shows a general progression of the author from writing about leftism to writing primarily about technology toward the end of the document. From the results, it is evident that topic 1 (technology) is prevalent in section 20, "Human Race at a Crossroads," and topic 2 (leftism) is prevalent in section 3, "Feelings of Inferiority." Below, the `text2vec` package is used again to informally verify the results.
+
+```{r}
+tech_tokens = human_race_at_a_crossroads   %>% 
+              tolower %>% 
+              tokenize_words()
+tech_itoken = itoken(tech_tokens, progressbar = FALSE)
+tech_vocab = create_vocabulary(tech_itoken, stopwords = stop_words[[1]])
+
+# Display the top 25 words used in the section
+head(tech_vocab[order(-tech_vocab$term_count),],25)
+```
+
+  A lot of words relating to technology are used frequently in this section including industrial, technology, technophiles and technical. The model did pretty well in classifying this section as being related to topic 1. The process is repeated below for the section reportedly relating to topic 2.
+
+```{r}
+left_tokens = feelings_of_inferiority   %>% 
+              tolower %>% 
+              tokenize_words()
+left_itoken = itoken(left_tokens, progressbar = FALSE)
+left_vocab = create_vocabulary(left_itoken, stopwords = stop_words[[1]])
+
+# Display the top 25 words used in the section
+head(left_vocab[order(-left_vocab$term_count),],25)
+```
+
+  This section is obviously related to leftism as indicated by the word counts. However, the Unabomber also describes other specific groups of people in this section:  activists, women, white, and black. Again, the model did well in classifying this section as being related to topic 2.
+
+  The third class of text mining methodology used in this study is sentiment analysis. Now that the topics have been extracted, is there a way to find the author's sentiment about each topic? There are minimal resources available that demonstrate relating results from topic modeling to sentiment analysis. For this analysis, two methods were hypothesized in an attempt to determine the Unabomber's sentiment about both topics.
+
+1. Extract sentences containing prevalent words in each topic and find sentiment of the sentences
+2. Use gamma values to assign topics to each section and find sentiment of the sections
+
+  Both of these methods will use the `sentimentr` package recently developed by Tyler Rinker, a well known data scientist who was unsatisfied with the sentiment capabilities of R [(5)](https://github.com/trinker/sentimentr). His package is helpful because it takes the context of the sentences into account when calculating sentiment scores. Consider the example below. 
+
+```{r}
+sentiment('I am very satisfied. She is not very satisfied.')
+```
+
+  Some software would be confused by the word use in the second sentence, but it is obvious that the first sentence should have a much higher sentiment score than the second. As shown by the output, Rinker's function is not tripped up by tricky word use. His function can be used over the course of the entire text to view any sentiment trends. Rinker's package evaluates the sentiment of sentences and a sentence parser function is included.
+
+```{r}
+my_sentences <- get_sentences(paste(section, collapse = ' '))
+my_sentiment <- sentiment(my_sentences)
+summary(my_sentiment$sentiment)
+plot(my_sentiment$sentence_id, my_sentiment$sentiment,"l")
+```
+
+  In the plot, the first sentences are on the left and the final sentences are on the right. There are no obvious trends that you might see in a novel. There are no periods of time where the sentences were all positive or negative. The mean sentiment was 0.015, but the most negative sentence was more negative than the most positive sentence was positive. This happens to be the 497th sentence, which is shown below.
+
+```{r}
+my_sentences[[1]][497]
+```
+
+  For the first attempt to use sentiment analysis with topic modeling results, some of the top terms in each topic found using the beta spread technique were used to pull sentences from the text. Obviously, this is not a perfect method as there could be sentences that include terms from both topics.
+
+```{r}
+# Finding topic 1 sentences by locating specified words
+contains.tech <- stringr::str_detect(tolower(texts(my_sentences[[1]])), "technology|technological|industrial|revolution")
+summary(contains.tech)
+```
+
+  There are 254 sentences in the manifesto that contain these terms.
+
+```{r}
+# Combining logical variable with existing full vector of sentences and subsetting to find vector of sentences that include specified words
+technology_df <- cbind(my_sentences[[1]],contains.tech)
+technology_sentences <- subset(technology_df,contains.tech==TRUE)
+
+# Performing sentiment analysis
+technology_sentiment <- sentiment(technology_sentences[,1])
+sum(table(technology_sentiment$sentiment[technology_sentiment$sentiment < 0])) 
+hist(technology_sentiment$sentiment)
+```
+
+  There is not a lot to be gained from these results. Out of the 254 sentences, only 97 were negative. From the histogram, it seems that the extracted sentences tend to be positive. This methodology can be repeated for topic 2.
+
+```{r}
+# Finding topic 2 sentences by locating specified words
+contains.left <- stringr::str_detect(tolower(texts(my_sentences[[1]])), "leftist|leftism|leftists|power|individual")
+summary(contains.left)
+```
+
+  There are 308 sentences in the manifesto that contain these terms.
+
+```{r}
+# Combining logical variable with existing full vector of sentences and subsetting to find vector of sentences that include specified words
+leftist_df <- cbind(my_sentences[[1]],contains.left)
+leftist_sentences <- subset(leftist_df,contains.left==TRUE)
+
+# Performing sentiment analysis
+leftist_sentiment <- sentiment(leftist_sentences[,1])
+sum(table(leftist_sentiment$sentiment[leftist_sentiment$sentiment < 0]))
+hist(leftist_sentiment$sentiment)
+```
+
+  These results were also not very useful. Out of the 308 sentences, only 125 were negative. However, these sentences tended to be more negative than the topic 1 sentences as shown by the histogram.
+
+  It is difficult to trust these results due to imperfections in the methodology for sentence extraction. The sentences extracted were not guaranteed to relate to the topics identified. While there exists *gamma*, the probability that each document relates to each topic, there is no similar measure at the sentence level which would be helpful in this case. Without the necessary information, moving the sentiment analysis to the section level might produce more helpful results. In this method, manifesto sections with a *gamma* greater than 0.5 for a topic were assigned to that topic. This division provided a clean break because no section had both *gamma* values exceed 0.5. This code expands off of the previously formed *gamma* matrix.
+
+```{r}
+# Create new variable identifying the topic assigned to each section
+una_gammas$topic <- 1
+una_gammas$topic[una_gammas$`gamma 2` >= 0.5] <- 2
+una_gammas
+table(una_gammas$topic)
+```
+
+  According to the LDA model, 14 sections relate to topic 1 and 11 sections to topic 2. In the code below, the text of each section is assigned to its respective topic.
+
+```{r}
+# Topic 1 (sections 1, 8 and 12 to 23)
+tech_sections <- list(introduction,sources_of_social_problems,the_nature_of_freedom,some_principles_of_history,restriction_of_freedom_is_unavoidable_in_industrial_society,the_bad_parts_of_technology_cannot_be_separated_from_the_good_parts,technology_is_a_more_powerful_social_force_than_the_aspiration_for_freedom,simpler_social_problems_have_proved_intractable,revolution_is_easier_than_reform,control_of_human_behavior,human_race_at_a_crossroads,the_future,strategy,two_kinds_of_technology)
+
+# Topic 2 (sections 2 to 7, 9 to 11 and 24 to 25)
+left_sections <- list(the_psychology_of_modern_leftism,feelings_of_inferiority,oversocialization,the_power_process,surrogate_activities,autonomy,disruption_of_the_power_process_in_modern_society,how_some_people_adjust,the_motives_of_scientists,the_danger_of_leftism,final_note)
+```
+
+  Using the lists of sections, sentiment analysis is performed.
+
+```{r}
+# Parsing sections into sentences
+tech.text <- paste(unlist(tech_sections), collapse = ' ')
+tech_sentences <- get_sentences(tech.text)
+
+# Performing sentiment analysis
+tech_sentiment <- sentiment(tech_sentences)
+hist(tech_sentiment$sentiment)
+```
+
+  This method is repeated below for topic 2 sections.
+
+```{r}
+# Parsing sections into sentences
+left.text <- paste(unlist(left_sections), collapse = ' ')
+left_sentences <- get_sentences(left.text)
+
+# Performing sentiment analysis
+left_sentiment <- sentiment(left_sentences)
+hist(left_sentiment$sentiment)
+```
+
+  These results are slightly more useful than those of the first method of performing a search for relevant terms. Both plots show a prevalence of negative sentences. The histogram of topic 2 is particularly skewed negatively. However, these results are still not perfect because there could possibly be sentences from the other topic scattered within a section with a high *gamma* for one topic.
+   
+## Conclusions
+
+### Findings
+
+  The use of document summarization, topic modeling and sentiment analysis provided a picture of the Unabomber's numerous qualms with society. Document summarization was used to extract five sentences, the majority of which were conducive to understanding the manifesto. From the summary, it was clear that human behavior had been changed by the onset of technology in the author's opinion and he envisioned a future where people could live close to nature without technology. The results from document summarization were compared to those from a two topic LDA model. The LDA model showed two distinct topics. One dealt with increased societal reliance on technology while the other related to people, mainly those identified as leftists. Sentiment analysis was used in an attempt to capture the author's feelings toward these topics. The first method was to search the document's sentences for key tokens produced by the LDA model. When this method produced limited meaningful results, sentiment analysis was expanded to analyzing sections of the text that were assigned to each topic based on *gamma* values. This method showed a prevalence of negative sentences within both the sections related to technology and those related to leftism.
+
+  As part of the validation process for the results of the text mining methods, a close reading of the manifesto was performed. While there are a fair share of outlandish ramblings, there is some narrative present in the document. In the text, the Unabomber criticizes technology for destabilizing society, causing psychological and physical pain to people and damaging the natural world. He considers technologies like surveillance as attempts to control and modify human behavior. The author contends that adopting technologies has become necessary, not optional, in society. In his opinion, the fault for this issue does not lie solely with those who developed these technologies, but also people who allowed technology to take over. The main culprit that the Unabomber attempts to connect to this problem are leftists who are defined as oversensitive, activist-type people who have low self-esteem. The Unabomber states that people have lost their autonomy, instead letting large organizations and technology orchestrate their lives. He views leftists as an enemy of his movement to inspire a revolution to overthrow technological society in hopes that the human race can regress into dependence on nature alone.
+
+  This close reading of the manifesto showed that the text mining methods used in this analysis were pretty effective in producing a quick overview of the text. It is clear that LDA identified the two most prominent topics. However, the output from LDA is simply a list of words which can be hard to interpret. For example, two words included in topic 2 were power and process. Without reading the manifesto, it would not have been possible to realize that "power process" was actually an oft-used concept in the text that could have arguably represented another topic. Instead, these words were lumped into the leftism topic. The power process concept did show up in the document summarization results, which shows the effectiveness of running multiple methods instead of only one. From reading the manifesto, it is obvious that the author is strongly against technology and leftists. However, the sentiment analysis results were not overly negative and almost showed an indifference toward these topics. These methods are not perfect. Sentiment analysis is inherently biased since it is performed using dictionaries of positive and negative words that were created by people. This issue is highlighted by the simple example below.
+
+```{r}
+sentiment('technology')
+```
+
+  According to the package used in this analysis, technology is a positive word. To the Unabomber, technology is certainly not a positive word. Different authors might have different beliefs about the sentiment related to a word. While text mining methods produce interesting and quick results, these issues highlight the fact that using them does not always negate the need for reading. The methods used in this analysis generated a nice overview of the document, but there were holes in understanding the Unabomber's gripes and motives that could only be filled by reading the manifesto.
+  
+### Future Work
+
+  The Unabomber wrote many letters to his victims and the media during the course of his bombing campaign. Given more time, these documents could be used in addition to the manifesto to train the LDA model which might improve results. Additionally, it is clear that package choice matters when applying these methods using R. There are other document summarization, topic modeling and sentiment analysis packages that could be used and the results could be compared. 
+
+## References
+
+1. [FBI Profiler Says Linguistic Work Was Pivotal In Capture Of Unabomber - Dave Davies, NPR](https://www.npr.org/2017/08/22/545122205/fbi-profiler-says-linguistic-work-was-pivotal-in-capture-of-unabomber)
+2. [Unabomber Ted Kaczynski's Brother, Sister-in-Law Recall Turning Him in to FBI -  Aude Siochet and Alexa Valiente, ABC News](https://abcnews.go.com/US/unabomber-ted-kaczynskis-brother-sister-law-recall-turning/story?id=36845028)
+3. [tf-idf](https://en.wikipedia.org/wiki/Tf-idf)
+4. [Text Mining with R: A Tidy Approach - Julia Silge and David Robinson](https://www.tidytextmining.com/topicmodeling.html#latent-dirichlet-allocatio) 
+5. [sentimentr on GitHub](https://github.com/trinker/sentimentr)
+
+## Appendix
+
+  Code to divide data into sections:
+
+```{r, eval = FALSE}
+introduction <- rm_between(doc.text, 'Introduction', 'THE PSYCHOLOGY OF MODERN LEFTISM', extract=TRUE)[[1]]
+the_psychology_of_modern_leftism <- rm_between(doc.text,'THE PSYCHOLOGY OF MODERN LEFTISM','FEELINGS OF INFERIORITY', extract=TRUE)[[1]]
+feelings_of_inferiority <- rm_between(doc.text,'FEELINGS OF INFERIORITY','OVERSOCIALIZATION', extract=TRUE)[[1]]
+oversocialization <- rm_between(doc.text,'OVERSOCIALIZATION','THE POWER PROCESS', extract=TRUE)[[1]]
+the_power_process <- rm_between(doc.text,'THE POWER PROCESS','SURROGATE ACTIVITIES', extract=TRUE)[[1]]
+surrogate_activities <- rm_between(doc.text,'SURROGATE ACTIVITIES','AUTONOMY', extract=TRUE)[[1]]
+autonomy <- rm_between(doc.text,'AUTONOMY','SOURCES OF SOCIAL PROBLEMS', extract=TRUE)[[1]]
+sources_of_social_problems <- rm_between(doc.text,'SOURCES OF SOCIAL PROBLEMS','DISRUPTION OF THE POWER PROCESS IN MODERN SOCIETY', extract=TRUE)[[1]]
+disruption_of_the_power_process_in_modern_society <- rm_between(doc.text,'DISRUPTION OF THE POWER PROCESS IN MODERN SOCIETY','HOW SOME PEOPLE ADJUST', extract=TRUE)[[1]]
+how_some_people_adjust <- rm_between(doc.text,'HOW SOME PEOPLE ADJUST','THE MOTIVES OF SCIENTISTS', extract=TRUE)[[1]]
+the_motives_of_scientists <- rm_between(doc.text,'THE MOTIVES OF SCIENTISTS','THE NATURE OF FREEDOM', extract=TRUE)[[1]]
+the_nature_of_freedom <- rm_between(doc.text,'THE NATURE OF FREEDOM','SOME PRINCIPLES OF HISTORY', extract=TRUE)[[1]]
+some_principles_of_history <- rm_between(doc.text,'SOME PRINCIPLES OF HISTORY','RESTRICTION OF FREEDOM IS UNAVOIDABLE IN INDUSTRIAL SOCIETY', extract=TRUE)[[1]]
+restriction_of_freedom_is_unavoidable_in_industrial_society <- gsub(pattern = "  THE 'BAD' PARTS", "", rm_between(doc.text,'RESTRICTION OF FREEDOM IS UNAVOIDABLE IN INDUSTRIAL SOCIETY','OF TECHNOLOGY', extract=TRUE)[[1]])
+the_bad_parts_of_technology_cannot_be_separated_from_the_good_parts <- gsub(pattern = "'GOOD' PARTS  ", "", rm_between(doc.text,'FROM THE','TECHNOLOGY', extract=TRUE)[[1]])
+technology_is_a_more_powerful_social_force_than_the_aspiration_for_freedom <- gsub(pattern = "FOR  FREEDOM  ", "", rm_between(doc.text,'ASPIRATION','SIMPLER SOCIAL', extract=TRUE)[[1]])
+simpler_social_problems_have_proved_intractable <- rm_between(doc.text,'SIMPLER SOCIAL PROBLEMS HAVE PROVED INTRACTABLE','REVOLUTION IS EASIER THAN REFORM', extract=TRUE)[[1]]
+revolution_is_easier_than_reform <- rm_between(doc.text,'REVOLUTION IS EASIER THAN REFORM','CONTROL OF HUMAN BEHAVIOR', extract=TRUE)[[1]]
+control_of_human_behavior <- rm_between(doc.text,'CONTROL OF HUMAN BEHAVIOR','HUMAN RACE AT A CROSSROADS', extract=TRUE)[[1]]
+human_race_at_a_crossroads <- rm_between(doc.text,'HUMAN RACE AT A CROSSROADS','THE FUTURE', extract=TRUE)[[1]]
+the_future <- rm_between(doc.text,'THE FUTURE','STRATEGY', extract=TRUE)[[1]]
+strategy <- rm_between(doc.text,'STRATEGY','TWO KINDS OF TECHNOLOGY', extract=TRUE)[[1]]
+two_kinds_of_technology <- rm_between(doc.text,'TWO KINDS OF TECHNOLOGY','THE DANGER OF LEFTISM', extract=TRUE)[[1]]
+the_danger_of_leftism <- rm_between(doc.text,'THE DANGER OF LEFTISM','231.', extract=TRUE)[[1]]
+final_note <- rm_between(doc.text,'average bourgeois.','Notes', extract=TRUE)[[1]]
+```
+
+  Most frequent words in every section:
+
+```{r, fig.width=10, fig.height=20}
+una_tidy %>%
+  dplyr::anti_join(stop_words) %>%
+  group_by(section) %>%
+  dplyr::count(word, sort = TRUE) %>%
+  dplyr::top_n(10) %>%
+  ungroup() %>%
+  mutate(section = base::factor(section, levels = titles),
+         text_order = base::nrow(.):1) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, text_order), n, fill = section)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ section, scales = "free_y", nrow = 9) +
+  labs(x = "", y = "") +
+  coord_flip() +
+  theme(legend.position="none")
+```
