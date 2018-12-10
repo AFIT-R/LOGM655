@@ -176,11 +176,11 @@ sw_tidy %>%
 
 ```
 
-   This gives ua pretty good idea on who the major charaters are in each of the movies with Luke, Han, and C3PO being in the top for each of the movies.  
+   This gives ua pretty good idea on who the major charaters are in each of the movies with Luke, Han, and C3PO being in the top for each of the movies. It is hard to gain any additional information from this esspecially since many of the most frequently used words are used in all three movies.    
 
 ##Summarization of Each Movie
 
-   Now that we have looked at the word frequencies for each of the movies, we can move on to look at summaries of the movie script.  As mentioned above, these movie scrips are similar to books except the scripts have no descriptions of the environment. There are strictly statements that each charaters says.  Keeping that in mind, it is unrealistice to construct a full summary of the movie using extractive methods. Rather, we will pull out important lines said by charaters in an attempt to jog someones memory of what happens in the movie.  Our goal is to obtain the sequence of events in case someone who has already seen the movie but has fogotten the order of events that had taken place throughout the movie.  
+   Now that we have looked at the word frequencies for each of the movies, we can move on to look at summaries of the movie script.  As mentioned above, these movie scrips are similar to books except the scripts have no descriptions of the environment. There are strictly statements that each charaters says.  Keeping that in mind, it is unrealistic to construct a full summary of the movie using extractive methods. Rather, we will pull out important lines said by charaters in an attempt to jog someones memory of what happens in the movie.  Our goal is to obtain the sequence of events in case someone who has already seen the movie has fogotten the order of events that had taken place throughout the movie.  
    
    First we will have to restructor the data a little bit.  
 
