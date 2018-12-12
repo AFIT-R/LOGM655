@@ -190,7 +190,7 @@ pacman::p_load(tm,
                widyr)
 library(readr)
 
-Episode4<-read_file("File/SW_EpisodeIV.txt")
+Episode4<-read_file(".~/File/SW_EpisodeIV.txt")
 Episode4<-gsub('\\\"'," ",Episode4)
 
 clean <- tibble::tibble(text = Episode4) %>%

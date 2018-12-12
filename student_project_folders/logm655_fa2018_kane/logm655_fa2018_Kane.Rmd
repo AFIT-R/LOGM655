@@ -1,0 +1,544 @@
+---
+title: "LOGM 655 Student Project Report"
+author: "Zachary Kane"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    code_folding: 'hide'
+
+abstract: 'The purpose of this research was to gain a deeper understanding of President Trump''s tweets between January to November 2018. The twitter data was accessed from trumptwitterarchive.com, and initial data mining diagnostics were initially found using the `tidyverse` package. Latent Dirichlet Allocation topic modeling was used to learn the main topics President Trump tweeted about in 2018. Sentiment analysis was formed to see the general emotion of all his tweets, and lastly, this research found the specific words that when tweeted out, generated the most retweets and favorites.'
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = F,
+                      message = F,
+                      fig.align = 'center',
+                      cache = T,
+                      comment = NA)
+```
+
+```{r include=FALSE}
+pacman::p_load(pdftools,    
+               XML,          
+               here,         
+               countrycode,  
+               tibble,       
+               qdap,
+               stringr,
+               httr,
+               purrr,
+               dplyr,
+               ggmap,
+               lubridate,
+               tidytext,
+               tidyverse,
+               jsonlite,
+               ggplot2,
+               topicmodels,
+               stm,
+               tm,
+               SnowballC,
+               syuzhet) 
+```
+
+#Problem Background 
+
+Twitter is a popular social media website where users can publish 280 characters for people that follow them to see. These posts or tweets can be directed at a certain user, and users' feeds are populated with the tweets of users they follow. With the increase in Twitter's popularity within the past ten years, its' users now range from celebrities to even major businesses having their own twitter accounts. Twitter's unique micro blogging setup makes it a rich source for immediate messaging, world news, and public sentiment. Twitter presents a great deal of text mining opportunity and challenges. With the current political landscape in the United States, Twitter has propelled to the forefront of discussing contentious topics and news. President Donald Trump is largely involved in the political awakening of Twitter. The President is tweeting at a higher rate than anyone previously in that position, and his activity has sparked the interest of the public, specifically text miners searching for a deeper understanding of his posts. This research looks at the President's tweets from a data analysts prospective to learn the main topics and sentiments of his 2018 tweeted so far. The research also breaks down to date the sentiments of the President's tweets and which words from the President's tweets get retweeted the most.
+
+#Methodology
+
+##Data Selection
+ 
+Twitter allows users to gain access to a developer account and interface to the Twitter web API. However, depending on the user's developer account's access levels, Twitter can limit the number of tweets someone cans scrape. To get around Twitter's restrictions, President Trump's tweets from 01 January to 31 November 2018 were collected using the trumptwitterarchive.com [(1)](http://www.trumptwitterarchive.com/archive). This website allowed for more of the President's tweets to be imported into R versus using a Twitter developer account. The 3,217 was exported from the 
+
+```{r}
+url <- 'http://www.trumptwitterarchive.com/data/realdonaldtrump/%s.json'
+all_tweets <- map(2018:2018, ~sprintf(url, .x)) %>%
+  map_df(jsonlite::fromJSON, simplifyDataFrame = TRUE) %>%
+  mutate(created_at = lubridate::parse_date_time(created_at, "a b! d! H!:M!:S! z!* Y!")) %>%
+  tbl_df()
+eighteen_tweets <- filter(all_tweets, lubridate::date(created_at) < "2018-12-01") 
+dim(eighteen_tweets)
+colnames(eighteen_tweets)
+eighteen_tweets[1,]
+str(eighteen_tweets)
+```
+
+Interestingly enough, the President didn't begin tweeting in January 2018 until the 9th. The data for this research consists of the 3216 tweets by President Trump from January through November 2018. The above column names, single row, and structure of the Twitter data can be seen above. Each row of the data set is a single tweet accompanied by a few other Twitter statistics in the other columns. From here the Twitter data can be parsed out to only analyze the text in each tweet over one of the eleven months. 
+
+Before tokenizing the Twitter text, all of the web links tweeted by the President were removed. This cleaned the data so no web links were treated as words or could disrupt the analysis techniques. Each web link is prefaced with the "http" or "https" (? signifies the optionality of the s) followed by a sequence of one or more letters (uppercase or lowercase) or digits. The pattern specified below also removes any ampersands, which when importing the tweets get written as \&amp;. Additionally, tweeted emoji's generated an unusual string (for example: <f0><U+009F>) when imported to Twitter. The tokenizing methods tested did a good job removing these emoji strings, so they were never removed individually in the `str_replace_all` function. It would also be difficult to have tried to replace them since they are written after, attached to the preceding word (for example: #UCMA<f0><U+009F>). The mutate and `str_replace_all` functions removed either a web link or ampersand from all of President Trump's 2018 tweets. The filter function also removed all retweets which are begun with "RT". This research focused on original tweets and thought retweets didn't give as much insight into the President. Although the tweets he retweeted would be interesting to study separately. The below code also introduced a id column to identify each of the 2,767 original tweets. 
+
+```{r}
+#Split up retweets and remove web links and &'s
+trumps_tweets <- eighteen_tweets %>%
+  mutate(text = str_replace_all(text, "https?://t.co/[A-Za-z\\d]+|&amp;", "")) %>%
+  filter(!str_detect(text, "^(RT)")) %>%
+  mutate(id = row_number())
+nrow(trumps_tweets)
+```
+
+Tokenizing Twitter data is a common challenge analysts encounter. There are specific words' meanings that can be lost by using typical tokenizing techniques in most text analysis R packages. For example, a tokenizer not familiar with Twitter text may remove an @ symbol that precedes an entity. In Twitter an @ symbol means the following word is another user's name, and the user that wrote the post is tweeting at another user. There is significant meaning lost if all of the text is tokenized and twitter user names cannot be identified. A post to @Comcast is a different than someone that just wrote Comcast. It is beneficial to leave in @ too as it helps identify users, especially when users' names may not make any sense if it wasn't identified as being a user. @KingJames is the account for Lebron James. Just seeing KingJames may be confusing and loses the context connecting the word to Lebron James twitter account. This sort of slang usage on Twitter is also seen in hash tags which tags a messages with a specific theme or content making it easily found by users. Removing the # preceding that tag will remove some of its' meaning and could disrupt an analyst trying to make sense of atypical text that was a hash tag. Twitter being a current, immediate stream of micro blogs, slang words are regularly posted. Beyond just the Twitter specific punctuation, the prolific and latest slang words in tweets make the tokenization of Twitter text a demanding task.
+
+A few different tokenizing techniques were tested to see which performed best. The `tidytext` package's `unnest_tokens` function split the tweets into one word per tweet. There is a `tweets` token available in this package which tries to preserve usernames, hash tags, and URLS. The URLS tokenized were not of interest for this research, so they were still removed before tokenization as previously demonstrated. The `words` token alone removed all hash tags and names from the tweets making it the the sub optimal tokenizer for tweets. The `tweets` token performed better, but was unsuccessful in removing emoji text from a preceding word. The `tweets` token also left in dollar signs to indicate money whereas the word token just removed the symbol. An alternative, Twitter specific token, introduced by David Robinson's Twitter text analysis generated performed even better than the `unnest_tokens` tweets token by preserving even more usernames and hash tags [(3)](http://varianceexplained.org/r/trump-tweets/). The custom twitter token also wasn't tripped up by the emoji text strings that followed words. Each tokenizers for twitter specific text was compared by the number of hash tags and usernames each one identified. 
+
+```{r}
+words <- trumps_tweets %>%
+  tidytext::unnest_tokens(word, text, token = 'words')
+twitter_words <- trumps_tweets %>%
+  tidytext::unnest_tokens(word, text, token = 'tweets')
+#
+reg <- "([^A-Za-z\\d#@'])|'(?![A-Za-z\\d#@])"
+# Find Unique Words using alternative pattern and regex
+alt_tweet_words <- trumps_tweets %>%
+  tidytext::unnest_tokens(word, text, token = "regex", pattern = reg)
+#
+dim(words)
+dim(twitter_words)
+dim(alt_tweet_words)
+# Usernames
+sum(grepl('@+[[:alnum:]]', twitter_words$word))
+sum(grepl('@+[[:alnum:]]', alt_tweet_words$word))
+sum(grepl('@+[[:alnum:]]', twitter_words$word)) - sum(grepl('@+[[:alnum:]]', alt_tweet_words$word))
+#Hashtags
+sum(grepl('#+[[:alnum:]]', twitter_words$word))
+sum(grepl('#+[[:alnum:]]', alt_tweet_words$word))
+sum(grepl('#+[[:alnum:]]', twitter_words$word)) - sum(grepl('#+[[:alnum:]]', alt_tweet_words$word))
+```
+
+ The contextual importance of hash tags and usernames to tweets make the tidytext `word` token inferior to either of these compared twitter tokenizer options. The custom token pattern outperformed the tidytext's twitter tokenizer. The custom tokenizer, denoted by `alt_tweet_words` above, identified 72 more instances of usernames and 11 more instances of hash tags than the tidytext twitter tokenizer. These results make the custom twitter token the preferred tokenizer for dividing President Trump's tweets into a one-token-per-row format, stripped of all punctuation, and all lowercase for easy comparability. 
+ 
+##Inital Text Diagnostics
+
+To initially understand President Trump's tweets, the most common words, which are not very informative, were removed. Below shows the frequency of words, and it is clear that for the purposes of gaining deeper learning of President Trump's tweets, these common words can be removed. 
+
+```{r}
+alt_tweet_words %>%
+  dplyr::count(word, sort = TRUE)
+```
+
+Text mining aims to identify words that provide context. The `dplyr` package's function `anti_join` and built-in `stop_words` data set. With the stop words removed, the most used unique words over the past eleven months provide more information. 
+
+```{r}
+alt_tweet_words %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
+  dplyr::count(word, sort = TRUE)
+```
+
+It is also interesting to look at the top 10 most used unique words by month.
+
+```{r}
+# Top 5 used words by month
+alt_tweet_words %>%
+  anti_join(tidytext::stop_words) %>%
+  mutate(month = lubridate::month(created_at)) %>%
+  group_by(month) %>%
+  count(word, sort = TRUE) %>%
+  top_n(5) 
+```
+
+With the importance of the midterm elections in November, it is not that surprising that "vote" was the most tweeted unique word by President Trump. There are graphical representations of word occurrences by month as well as the subsequent initial diagnostics in the findings section. The percent of word use across all months was calculated by the number of occurrences of certain word in a given month (n) divided by the sum of all word occurrences across all eleven months (sum(n)). The percent of word use within each month was calculated by just dividing _n_ by the sum of all occurrences in that month. These new statistics were visualized using the `ggplot2` package. 
+
+The inverse document frequency or idf is defined as $N/{df}_t$, where N is the total number of documents in the collection, and $df_t$ is the number of documents in which term _t_ occurs. A lower idf score indicates a word is so common, and an idf of zero means a word is so common as to be completely non-discriminative. Term frequency is the frequency of a word in a document, and in the context of Trump's tweets, the months of 2018 are treated as documents. The function `bind_tf_idf` from the `tidytext` package is used to find the term frequencies and inverse document frequency. The term frequency is synonmous the percent of word use within each month except `bind_tf_idf` uses the $log_{10}$ of the frequency since words with high frequencies aren't necessarily more likely to be relevant to the meaning of the document. The tf-idf weighting of the value for word _t_ in document _d_, $w_{t,d}$, combines term frequency with idf:
+$$w_{t,d}=\text{tf}_{t,d} \times \text{idf}_t$$
+Tf-idf values help find the most important words for the content of each document by decreasing the weight for commonly used words and increasing the weight for words that are not used often in a collection of documents. This statistic helps to find words that are important in a text that aren't too common. With President Trump's 2018 tweets properly tokenized and a few, initial text diagnostics completed and explained, this research progressed to more complex text mining techniques.
+
+##Topic Modeling
+
+Topic modeling is a text mining technique used to find the concepts that run through documents. It is important tool for this research as it presents a way to simplify all of the tweets down into their meaning or a list of major topics discussed by the President in 2018. Two different packages in R will be tested to perform topic modeling: `topicmodels` and `stm`.
+
+Latent Dirichlet Allocation (LDA) treats each document as a mixture of topics and each topic as a mixture of words. Integral to LDA is the use of Dirichlet priors for the document-topic and word-topic distributions. The Dirichlet Distribution is a generalization of the Beta Distribution and is often called a "distribution of distribution".
+
+##Sentiment Analysis 
+
+The `syuzhet` package in R allows this research to generate sentiments for each tweet. Performing sentiment analysis on tweets is difficult once again because of the improper spelling of words and slang words used. Slang dictionaries are constantly being updated but the `syuzhet` package only utilizes standard word dictionaries. Sentiment analysis is particularly difficult on Twitter because of all the sarcasm users regularly used. Sentiment analysis works off the semantics of words, so a user's sarcasm is hard for the technique to pick up on. The tweets are first scrubbed of hash tags, urls, and other special characters. Then a sentiment score is assigned to each word in a tweet before being summed to find an overall tweet's sentiment score. `Syuzhet` breaks the emotion into 10 different emotions: anger, anticipation, disgust, fear, joy, sadness, surprise, trust, negative and positive. The resulting counts of positive, neutral, and negative sentiment tweets from President Trump are broken down in the proceeding findings section. 
+
+##Retweet Breakdown
+
+President Trumps tweets were broken down to see which words when used, received the most retweets. The average number of retweets for a specific word was calculated over all of the tweets this year. The same thing was done to see which words would receive on average the most favorites. The `summarise` function was used to count how many times each word was retweeted, for each tweet. There was some difference to between words were used at least five times when looked at the average number of retweets and favorites. The top ten words for both categories was plotted in the retweet analysis section of findings.
+
+#Findings
+
+The top seven occurrences of words in each month is plotted below. With ties, seven was the perfect number of words to plot to still have a readable and interpretable figure. Notably, only one hash tag (#maga) made the top seven occurrences in month 3, March 2018. 
+
+```{r}
+# Plot top 7 unique words by month
+(top10_plot_bymonth <- alt_tweet_words %>%
+  anti_join(tidytext::stop_words) %>%
+  mutate(month = lubridate::month(created_at)) %>%
+  group_by(month) %>%
+  count(word, sort = TRUE) %>%
+  top_n(7) %>%
+  ungroup() %>%
+  mutate(month = base::factor(month, levels = 1:11),
+         month_order = base::nrow(.):1) %>%
+  ## Pipe output directly to ggplot
+  ggplot(aes(reorder(word, month_order), n, fill = month)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ month, scales = "free_y") +
+  labs(x = "Words", y = "Occurences") +
+  coord_flip() +
+  theme(legend.position="none"))
+```
+
+```{r}
+trumps_tweets_pct <- alt_tweet_words %>%
+    dplyr::anti_join(tidytext::stop_words) %>%
+    dplyr::count(word) %>%
+    dplyr::transmute(word, all_words = n / sum(n))
+frequency <- alt_tweet_words %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
+  mutate(month = lubridate::month(created_at)) %>%
+  dplyr::count(month,word) %>%
+  dplyr::mutate(month_words = n / sum(n)) %>%
+  dplyr::left_join(trumps_tweets_pct) %>%
+  dplyr::arrange(dplyr::desc(month_words)) %>%
+  dplyr::ungroup()
+frequency
+```
+
+The way to read the frequency is that all of the same words should have the same all_words frequencies because that is calculated for the unique word over the course of the entire year. Whereas month_words is a specific frequency for a unique word in a given month. Interestingly the word "people" is a highly frequent unique word tweeted by President Trump in 2018 and of the shown "people" rows, it is most relatively frequent in month 6 (June). 
+
+```{r fig.width=8, fig.height=12}
+ggplot(frequency, 
+       aes(x = month_words, 
+           y = all_words, 
+           color = abs(all_words - month_words))) +
+  geom_abline(color = "gray40", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = scales::percent_format()) +
+  scale_y_log10(labels = scales::percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), 
+                       low = "darkslategray4", 
+                       high = "gray75") +
+  facet_wrap(~ month, ncol = 2) +
+  theme(legend.position="none") +
+  labs(y = "Trump Tweets 2018", x = NULL)
+```
+
+The above plot displays the frequency table. Words that are close to the line in these plots have similar frequencies across all months. For example, words such as "vote", "trump", and "people" are all common and used with similar frequencies across most months this year. Words that are far from the line are more so used in that month versus the over the course of the entire year. For example, "fbi" in November, "hunt" in October, and "trade" in January. These words were tweeted frequently for that month but not over the course of the year. Words far from the line may indicate there was something going on that month that likely prompted President Trump to tweet more about them as opposed to other months. 
+
+A correlation test was used to quantify how similar and different the set of unique words frequencies. 
+
+```{r}
+frequency %>%
+  dplyr::group_by(month) %>%
+  dplyr::summarize(correlation = stats::cor(month_words, all_words),
+                   p_value = stats::cor.test(month_words,
+                                             all_words)$p.value)
+```
+
+Based on all significant p values, no month contained significantly different unique word than over the entire year. However, it does appears as though the first three months of 2018 contained the relatively least correlated unique words tweeted by President Trump in 2018 so far.
+
+```{r}
+month_words <- alt_tweet_words %>%
+  mutate(month = lubridate::month(created_at)) %>%
+  count(month, word, sort = TRUE) %>%
+  dplyr::anti_join(tidytext::stop_words) %>%
+  ungroup()
+#
+total_words <- month_words %>%
+  group_by(month) %>%
+  summarise(total = sum(n))
+#
+month_words <- left_join(month_words, total_words)
+month_words
+#
+month_words <- month_words %>%
+  tidytext::bind_tf_idf(word, month, n)
+#
+month_words %>%
+  dplyr::arrange(dplyr::desc(tf_idf))
+```
+
+The words with the highest td-idf values are words are unique to a certain month meaning they were used by President Trump often in that month but not in others. The top tf-idf scoring words can be thought as possible important news events or stories that the President could have been tweeting about just for that month. President Trump's tweeted so few words in January that the top tf-idf list was dominated by words in month 1 due to their artificially high term frequency scores. The President, possibly for some reason, didn't begin tweeting in January till the 9th which made unique repeated words tweeted in January seem more common and have higher term frequencies. The top tf_idf list can be composed again without the January terms. 
+
+```{r}
+month_words <- month_words %>%
+  filter(month != 1) %>%
+  tidytext::bind_tf_idf(word, month, n)
+#
+month_words %>%
+  dplyr::arrange(dplyr::desc(tf_idf))
+```
+
+There are likely relationships between the unique words with high tf_idf scores for a certain month and the most relevant news stories for that month. For example, there must have been disproportionate amount of news surrounding DACA in February that lead President Trump to tweet it a lot and more than other months. 
+
+##Topic Modeling Results
+
+First, the words will be setup in the proper document term matrix where each tweet is consider a single document. 
+
+```{r}
+dfm_Tweets <- alt_tweet_words %>%
+  anti_join(stop_words) %>%
+  select(id, word) %>%
+  add_count(word, sort = TRUE) %>%
+  cast_dfm(id, word, n)
+dfm_Tweets
+```
+
+The package `stm` will be applied to first identify three different topics.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+topic_model <- stm::stm(dfm_Tweets, K=3, init.type = "LDA")
+```
+
+```{r}
+summary(topic_model)
+#
+topic_model <- tidy(topic_model)
+topic_model %>%
+  group_by(topic) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
+```
+
+With only three topics, it is hard to define a top based on the top 10 words. For this reason, two, four, and five topics were tested to see if the topics were more clear. 
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+topic_model2 <- stm::stm(dfm_Tweets, K=2, init.type = "LDA")
+```
+
+```{r}
+# Test 2 topics
+summary(topic_model2)
+#
+topic_model2 <- tidy(topic_model2)
+topic_model2 %>%
+  group_by(topic) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
+```
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+topic_model4 <- stm::stm(dfm_Tweets, K=4, init.type = "LDA")
+```
+
+```{r}
+# Test 4 topics
+summary(topic_model4)
+#
+topic_model4 <- tidy(topic_model4)
+topic_model4 %>%
+  group_by(topic) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
+```
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+topic_model5 <- stm::stm(dfm_Tweets, K=5, init.type = "LDA")
+```
+
+```{r}
+# Test 5 topics
+summary(topic_model5)
+#
+topic_model5 <- tidy(topic_model5)
+topic_model5 %>%
+  group_by(topic) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip()
+```
+
+It is difficult over the course of 2018 to make sense of the topics identified using the `stm` packages LDS method. Six topics was tested as well but inconclusive. The three topics were actually the easiest to define without consulting any experts. The first topic seemed to contain topics President Trump is trying to address, content, or fix in the country: democrats, border, vote, crime, military, job, and strong. Topic 2 seemed more about the President discussing himself or more personal matters:  trump, president, news, fake, trade, fbi, witch, hunt, media, and russia. The last topic seemed related to the American people and world: people, country, america, time, american, united, world, north, house, and jobs. The topic model confirmed most persons' guesses that President Trump tweet's would mainly be about the issues he sees in America, him own issues, and the American people/world role. 
+
+##Sentiment Analysis Results
+
+First the emotions of each tweet were collected, scored, and summed to have a sentiment score per tweet.
+
+```{r}
+#head(trumps_tweets$text)
+#Removing hashtags, URLs, and special characters
+trump_tweets.df2 <- gsub("http.*","",trumps_tweets$text)
+trump_tweets.df2 <- gsub("https.*","",trump_tweets.df2)
+trump_tweets.df2 <- gsub("#.*","",trump_tweets.df2)
+trump_tweets.df2 <- gsub("@.*","",trump_tweets.df2)
+#Not a perfect removal system of code
+#Need to additionally remove emjoi's 
+trump_tweets.scrubbed <- gsub("[^\x01-\x7F]", "", trump_tweets.df2)
+```
+
+The imperfect cleaning techniques used for the President's tweets limits the `syuzhet` packages functions to perfectly analyze all the tweets. Some tweets lose their meanings and thus sentiments once they have certain hashtags or links removed. 
+
+```{r}
+word.df <- as.vector(trump_tweets.scrubbed)
+emotion.df <- syuzhet::get_nrc_sentiment(trump_tweets.scrubbed)
+# Bind all the sentiment's with each tweet
+emotion.df2 <- cbind(trump_tweets.scrubbed, emotion.df) 
+head(emotion.df2)
+```
+
+```{r}
+# Get Most Positive Tweet
+sent.value <- get_sentiment(word.df)
+most.positive <- word.df[sent.value == max(sent.value)]
+most.positive
+# The follow on ...'s indicate Trump's train of thought is continued on the next tweets, here they are for added context
+word.df[332]
+
+# Get Most Negative Tweet
+most.negative <- word.df[sent.value <= min(sent.value)] 
+most.negative
+# The ...'s indicate Trump's train of thought is continued on the next tweets, here they are for added context
+word.df[38]
+word.df[37]
+```
+
+It is clear that the most positive and negative tweets include many emotional words. Longer tweets that use more choice words score higher are more likely to be the most negative or positive.
+
+```{r}
+positive.tweets <- word.df[sent.value > 0]
+negative.tweets <- word.df[sent.value < 0]
+neutral.tweets <- word.df[sent.value == 0]
+head(positive.tweets)
+head(negative.tweets)
+head(neutral.tweets)
+```
+
+Interestingly, the tweets that were scrubbed and left with no text or just a single punctuation all were tagged as being neutral. This means that possibly positive or negative tweets are being lost from the overall analysis, but at least they are being counted as neutral and not artificially bumping up the counts of positive or negative tweets.
+
+```{r}
+category_senti <- ifelse(sent.value < 0, "Negative", ifelse(sent.value > 0, "Positive", "Neutral"))
+table(category_senti)
+```
+
+The neutral category that collected the meaningless tweets was still the minority. The sentiment analysis found that President Trump tweets' sentiments are overall more positive than negative. This is not a perfect metric of the President's tweets, but it is definitely an interesting finding. This result for 2018 tweets through November were consistent with Chaitanya Sagar's sentiment of a different subset of President Trump's tweets. 
+
+##Reweet Analysis Results
+
+```{r}
+reg <- "([^A-Za-z\\d#@'])|'(?![A-Za-z\\d#@])"
+# Find Unique Words using alternative pattern and regex
+tweet_words <- trumps_tweets %>%
+  tidytext::unnest_tokens(word, text, token = "regex", pattern = reg) %>% 
+  anti_join(tidytext::stop_words)
+#
+(word_by_rts <- tweet_words %>% 
+  group_by(id, word) %>% 
+  summarise(rts = first(retweet_count)) %>%
+  group_by(word) %>%
+  summarise(retweets = mean(rts), uses = n()) %>%
+  filter(retweets != 0) %>%
+  ungroup()   %>%
+  arrange(desc(uses)))
+#
+word_by_rts %>%
+  top_n(10, retweets) %>%
+  arrange(retweets) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(word, retweets)) +
+  geom_col(show.legend = FALSE,fill = "#FF6666") +
+  coord_flip() +
+  labs(x = NULL, 
+       y = "Mean # of retweets for tweets containing each word")
+
+word_by_rts %>%
+  filter(uses >= 5) %>%
+  top_n(10, retweets) %>%
+  arrange(retweets) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(word, retweets)) +
+  geom_col(show.legend = FALSE,fill = "#FF6666") +
+  coord_flip() +
+  labs(x = NULL, 
+       y = "Mean # of retweets for tweets containing each word (uses > 5)")
+
+```
+
+The same thing can be done but for the number of favorites a tweet gets.
+
+```{r}
+(word_by_fav <- tweet_words %>% 
+  group_by(id, word) %>% 
+  summarise(favs = first(favorite_count)) %>%
+  group_by(word) %>%
+  summarise(favorites = mean(favs), uses = n()) %>%
+  filter(favorites != 0) %>%
+  ungroup()   %>%
+  arrange(desc(uses)))
+#
+word_by_fav %>%
+  top_n(10, favorites) %>%
+  arrange(favorites) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(word, favorites)) +
+  geom_col(show.legend = FALSE, fill = "#FF6666") +
+  coord_flip() +
+  labs(x = NULL, 
+       y = "Mean # of favorites for tweets containing each word")
+
+word_by_fav %>%
+  filter(uses >= 5) %>%
+  top_n(10, favorites) %>%
+  arrange(favorites) %>%
+  ungroup() %>%
+  mutate(word = factor(word, unique(word))) %>%
+  ungroup() %>%
+  ggplot(aes(word, favorites)) +
+  geom_col(show.legend = FALSE,fill = "#FF6666") +
+  coord_flip() +
+  labs(x = NULL, 
+       y = "Mean # of favorites for tweets containing each word (uses > 5)")
+```
+
+With the amount of uses restricted to at least five, the word that when used, President Trump gets the most favorites and retweets is Kanye. 
+
+#Conclusions
+
+There is a lot this research learned about President Trumps tweets and some general assumptions about the President's twitter use that are now confirmed by analysis. The topics identified in President Trumps tweets all somewhat dealt with the same general discussions regularly seen in the news. Topic modeling with three categories generally found his tweets grouped about issues he sees in America, him own ongoing issues, and the American people/world role. There was a lot of overlap between the topics despite varying the number specified. The sentiment analysis conducted found that the President tweeted out nearly double the amount of positively scored tweets than negative ones. Despite the President's twitter activity being regularly criticized, the emotional sentiments behind most of his tweets were positive. The president received the most favorites and retweets when he tweeted out "Kanye". The President's relation with Kanye West was a polarizing 2018 news story that twitter users payed a lot of attention to by retweeting and favoriting the President's "Kanye" related tweets.  
+
+##Future Work
+
+There is still a great deal of research to be done on the President's tweets. Named entity recognition was not conducted on any tweets, but identifying the named entities opens another avenue of research that could lend further understanding of the President. No summarization methods were used, but summarizing the President's tweets could simplify them down into the most important information. Those that respond to the President's tweets could additionally be looked at to gain some understanding about the public's response and feelings over what the President tweets. As President Trump's twitter activity remains very high (a little over eight per day), there is a continued, live stream of text that can be analyzed. 
+
+#References
+
+1. [Trump Twitter Archive](http://www.trumptwitterarchive.com/archive)
+2. [Text analysis of Trump's tweets confirms he writes only the (angrier) Android half](http://varianceexplained.org/r/trump-tweets/)
+3. Speech and Language Processing. Jurafsky, Daniel and Martin, James H. Draft Date: September 23, 2018.
+4. [Twitter Data Analysis with R](http://www.rdatamining.com/docs/twitter-analysis-with-r)
+5. [Text Processing and Sentiment Analysis of Twitter Data](https://hackernoon.com/text-processing-and-sentiment-analysis-of-twitter-data-22ff5e51e14c)
+6. [Topic Modeling](file:///C:/Users/ZKane/OneDrive/Documents/LOGM655/inclass_activity/sentiment/Master.html)
+7. [Tweets for Topic Modeling](file:///C:/Users/ZKane/OneDrive/Documents/LOGM655/inclass_activity/sentiment/Tweet_Topic_Model.html)
+8. [Stylistic variation in the realDonaldTrump Twitter account and the stylistic typicality of the Pled Tweet](https://rpubs.com/jwgrieve/340342)
+9. [Filter with Date data](https://blog.exploratory.io/filter-with-date-function-ce8e84be680)
+10. [Word Relationships](file:///C:/Users/ZKane/OneDrive/Documents/LOGM655/lectures/word_relationships/master.html)
+11. [Introduction to tidytext](https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html)
+12. [Topic Modeling with LSA, PLSA, LDA & lda2Vec](https://medium.com/nanonets/topic-modeling-with-lsa-psla-lda-and-lda2vec-555ff65b0b05)
+13. [Twitter Sentiment Analysis using R](http://dataaspirant.com/2018/03/22/twitter-sentiment-analysis-using-r/)
+14. [Removing Emoticons in R using TM Package](https://stackoverflow.com/questions/44893354/remove-emoticons-in-r-using-tm-package)
+
+
+
+
+
