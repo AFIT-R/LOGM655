@@ -1,3 +1,5 @@
+
+#Code adapted from the following:
 # https://www.kaggle.com/rtatman/tutorial-sentiment-analysis-in-r
 
 
@@ -94,7 +96,7 @@ for(i in my_files){
 ggplot(sentiments, aes(group = method, x = YYYYMM, y = sentiment, color = method)) + 
   geom_line() + 
   geom_vline(xintercept = 9) +
-  geom_smooth(method = "auto") # pick a method & fit a model
+  geom_smooth(method = "auto")
 
 #Word clouds
 
@@ -122,7 +124,7 @@ sentimentBing <- tokens %>%
 
 
 
-bookText <- pdftools::pdf_text(pdf = my_files[1])
+bookText <- pdftools::pdf_text(pdf = my_files[16])
 
 tokens <- data_frame(text = bookText) %>% 
   unnest_tokens(word, text) %>%
@@ -161,7 +163,7 @@ sentiment <- tokens %>%
 
 sentiment <- rbind(sentiment, sentimentsL)
 
-sentiment <- tokens %>%
+sentimentAFRINN <- tokens %>%
   inner_join(get_sentiments("afinn")) %>% 
   group_by(index = word ) %>%
   summarise(sentiment = sum(score))

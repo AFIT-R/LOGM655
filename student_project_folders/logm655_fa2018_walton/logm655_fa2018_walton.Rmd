@@ -2,16 +2,16 @@
 title: "Analysis of the U.S. Federal Reserve's Beige Book using Sentiment Analysis"
 author: "Capt Ryan Walton"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
-header-includes: #allows you to add in your own Latex packages
-- \usepackage{float} #use the 'float' package
-- \floatplacement{figure}{H} #make every figure with caption = h
+header-includes: 
+- \usepackage{float} 
+- \floatplacement{figure}{H}
 output:
   html_document:
     code_folding: show
     fig_caption: yes
     keep_tex: yes
   pdf_document: default
-abstract: The U.S. Federal Reserve publishes the "Beige Book," an economic analysis of the health of the U.S. economy. This book is published eight times a year and is often considered an indicator of future economic health. This book is always published during market hours, providing investors a small window to read and react to the information within before the markets close for the day. As such, quick and thorough insights into this book could prove helpful. Sentiment analysis is the study of extracting sentiment from textual documents. These algorithms, or "lexicons," contain dictionaries used to score or categorize words found in the subject text, with the end goal of classifying the document as either "positive" or "negative." For this research, sentiment analysis will be applied to two years of Beige Book releases in order to determine market well-being, using the price charts of the Dow Jones Industrial Average and the SP 500 as a benchmark. Finally, to provide a higher level of fidelity, word clouds were generated to see which words appeared most in each lexicon for each book in our dataset. 
+abstract: The U.S. Federal Reserve publishes the "Beige Book," an economic analysis of the health of the U.S. economy. This Beige Book is published eight times a year and is often considered an indicator of future economic health. This book is always published during market hours, providing investors a small window to read and react to the information within before the markets close for the day. As such, quick and thorough insights into this book could prove helpful. Sentiment analysis is the study of extracting sentiment from textual documents. These algorithms, or "lexicons," contain dictionaries used to score or categorize words found in the subject text, with the end goal of classifying the document as either "positive" or "negative." For this research, sentiment analysis will be applied to two years of Beige Book releases in order to determine market well-being, using the price charts of the Dow Jones Industrial Average and the SP 500 as a benchmark. Finally, to provide a higher level of fidelity, word clouds were generated to see which words appeared most in each lexicon for each book in our dataset. 
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
