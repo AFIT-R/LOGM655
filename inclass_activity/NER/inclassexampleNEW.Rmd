@@ -116,7 +116,7 @@ annotate(s, entity_annotator, a2)
 ## Directly:
 entity_annotator(s, a2)
 ## And slice ...
-s[entity_annotator(s, a2)]
+table(s[entity_annotator(s, a2)])
 ```
 
 Next, the location entities
@@ -128,7 +128,6 @@ annotate(s, entity_annotator_location, a2)
 entity_annotator_location(s, a2)
 ## And slice ...
 s[entity_annotator_location(s, a2)]
-
 ```
 
 Next, the organization entities
