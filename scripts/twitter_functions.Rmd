@@ -43,7 +43,7 @@ get_tweets <- function(text = '#trump',
   
 if(!(is.null(location) | missing(location))) {
   
-   lat_long <- ggmap::geocode(location, source = 'dsk')
+   lat_long <- ggmap::geocode(location, source = 'google')
    
    if(is.null(dist)  | missing(dist))  dist  = '20'
    if(is.null(units) | missing(units)) units = 'mi'
@@ -69,7 +69,7 @@ return(tweet_df)
 Check function
 
 ```{r}
-tweet_df <- get_tweets(text = '#hungry',
+tweet_df <- get_tweets(text = '#trump',
                        location = 'Dayton, OH',
                        dist = 50,
                        units = 'mi')

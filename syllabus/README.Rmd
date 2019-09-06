@@ -2,11 +2,7 @@
 title: 'LOGM 655 - Text Mining'
 author: '<h3>Course Syllabus - Fall 2018</h3>'
 date: '<h3>MW 1200-1330 Bldg. 640 Rm. 326 (3.0 Credit Hours)</h3>'
-output: 
-  github_document:
-    html_preview: no
-    toc: true
-    toc_depth: 2
+output: word_document
 ---
 
 ```{r, echo=FALSE}
