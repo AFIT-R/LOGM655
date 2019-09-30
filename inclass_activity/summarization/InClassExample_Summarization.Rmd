@@ -292,3 +292,4 @@ Part1_summary[["sentences"]] %>%
 1. [LexRank Example for Online Article Summarization](https://adamspannbauer.github.io/2017/12/17/summarizing-web-articles-with-r/)
 2. [TextRank By Thomas W. Jones](https://cran.r-project.org/web/packages/textmineR/vignettes/e_doc_summarization.html)
 3. [TextRank example for Books](https://www.hvitfeldt.me/2018/03/tidy-text-summarization-using-textrank/)
+

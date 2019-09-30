@@ -1,0 +1,24 @@
+---
+title: "Importing Text From Documents"
+author: "Jason Freels"
+date: "10/9/2018"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    css: 'css/afit_canvas.css'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+```
+
+## Overview
+
+This Module walks through the process of extracting unstructured text data from various documents.  It is assumed that the documents from which the data will be extracted are saved using one of the following file formats:
+
+1. Plain text - i.e. notepad `.txt` files or a similar format
+2. Word Document
+3. PDF document - saved either as a native PDF file OR as a scanned image
+
+There are a number of R packages and/or 3^rd^ party tools that can be used for this purpose.  We'll demo these tools by extracting the text from the `supreme_court_opinions_2017_sample` folder, note that all of these files are saved using the PDF format.

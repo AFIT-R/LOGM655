@@ -13,14 +13,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
-
 ## Overview
 
-This document walks through the process of extracting text data from documents.  It is assumed that the documents from which the data will be extracted are saved using on of the following formats:
+This document walks through the process of extracting text data from documents.  It is assumed that the documents from which the data will be extracted are saved using one of the following formats:
 
 1. Plain text - i.e. notepad `.txt` files or a similar format
 2. Word Document
-3. PDF document - saved as an actual file and NOT as a scanned image
+3. PDF document - saved either as a native PDF file OR as a scanned image
 
 There are a number of R packages and/or 3^rd^ party tools that can be used for this purpose.  I'll demo these tools by extracting the text from the `supreme_court_opinions_2017_sample` folder, note that all of these files are saved using the PDF format.
 
@@ -38,7 +37,8 @@ With the `pacman` package installed, we can easily install and load other packag
 pacman::p_load(XML,
                rvest,
                RCurl,
-               rprojroot)
+               rprojroot,
+               tesseract)
 ```
 
 ### Saving local copies of the documents 
@@ -294,6 +294,147 @@ docx1[90]
 ```
 
 Here we see that this function extracts the text as paragraphs, rather than as lines or pages.
+
+
+## OCR
+
+```{r}
+ pngfile <- pdftools::pdf_convert(fle, dpi = 600)
+```
+
+```{asis}
+Converting page 1 to Space Launch_94-05_R_1.png... done!
+Converting page 2 to Space Launch_94-05_R_2.png... done!
+Converting page 3 to Space Launch_94-05_R_3.png... done!
+Converting page 4 to Space Launch_94-05_R_4.png... done!
+Converting page 5 to Space Launch_94-05_R_5.png... done!
+Converting page 6 to Space Launch_94-05_R_6.png... done!
+Converting page 7 to Space Launch_94-05_R_7.png... done!
+Converting page 8 to Space Launch_94-05_R_8.png... done!
+Converting page 9 to Space Launch_94-05_R_9.png... done!
+Converting page 10 to Space Launch_94-05_R_10.png... done!
+Converting page 11 to Space Launch_94-05_R_11.png... done!
+Converting page 12 to Space Launch_94-05_R_12.png... done!
+Converting page 13 to Space Launch_94-05_R_13.png... done!
+Converting page 14 to Space Launch_94-05_R_14.png... done!
+Converting page 15 to Space Launch_94-05_R_15.png... done!
+Converting page 16 to Space Launch_94-05_R_16.png... done!
+Converting page 17 to Space Launch_94-05_R_17.png... done!
+Converting page 18 to Space Launch_94-05_R_18.png... done!
+Converting page 19 to Space Launch_94-05_R_19.png... done!
+Converting page 20 to Space Launch_94-05_R_20.png... done!
+Converting page 21 to Space Launch_94-05_R_21.png... done!
+Converting page 22 to Space Launch_94-05_R_22.png... done!
+Converting page 23 to Space Launch_94-05_R_23.png... done!
+Converting page 24 to Space Launch_94-05_R_24.png... done!
+Converting page 25 to Space Launch_94-05_R_25.png... done!
+Converting page 26 to Space Launch_94-05_R_26.png... done!
+Converting page 27 to Space Launch_94-05_R_27.png... done!
+Converting page 28 to Space Launch_94-05_R_28.png... done!
+Converting page 29 to Space Launch_94-05_R_29.png... done!
+Converting page 30 to Space Launch_94-05_R_30.png... done!
+Converting page 31 to Space Launch_94-05_R_31.png... done!
+Converting page 32 to Space Launch_94-05_R_32.png... done!
+Converting page 33 to Space Launch_94-05_R_33.png... done!
+Converting page 34 to Space Launch_94-05_R_34.png... done!
+Converting page 35 to Space Launch_94-05_R_35.png... done!
+Converting page 36 to Space Launch_94-05_R_36.png... done!
+Converting page 37 to Space Launch_94-05_R_37.png... done!
+Converting page 38 to Space Launch_94-05_R_38.png... done!
+Converting page 39 to Space Launch_94-05_R_39.png... done!
+Converting page 40 to Space Launch_94-05_R_40.png... done!
+Converting page 41 to Space Launch_94-05_R_41.png... done!
+Converting page 42 to Space Launch_94-05_R_42.png... done!
+Converting page 43 to Space Launch_94-05_R_43.png... done!
+Converting page 44 to Space Launch_94-05_R_44.png... done!
+Converting page 45 to Space Launch_94-05_R_45.png... done!
+Converting page 46 to Space Launch_94-05_R_46.png... done!
+Converting page 47 to Space Launch_94-05_R_47.png... done!
+Converting page 48 to Space Launch_94-05_R_48.png... done!
+Converting page 49 to Space Launch_94-05_R_49.png... done!
+Converting page 50 to Space Launch_94-05_R_50.png... done!
+Converting page 51 to Space Launch_94-05_R_51.png... done!
+Converting page 52 to Space Launch_94-05_R_52.png... done!
+Converting page 53 to Space Launch_94-05_R_53.png... done!
+Converting page 54 to Space Launch_94-05_R_54.png... done!
+Converting page 55 to Space Launch_94-05_R_55.png... done!
+Converting page 56 to Space Launch_94-05_R_56.png... done!
+Converting page 57 to Space Launch_94-05_R_57.png... done!
+Converting page 58 to Space Launch_94-05_R_58.png... done!
+Converting page 59 to Space Launch_94-05_R_59.png... done!
+Converting page 60 to Space Launch_94-05_R_60.png... done!
+Converting page 61 to Space Launch_94-05_R_61.png... done!
+Converting page 62 to Space Launch_94-05_R_62.png... done!
+Converting page 63 to Space Launch_94-05_R_63.png... done!
+Converting page 64 to Space Launch_94-05_R_64.png... done!
+Converting page 65 to Space Launch_94-05_R_65.png... done!
+Converting page 66 to Space Launch_94-05_R_66.png... done!
+Converting page 67 to Space Launch_94-05_R_67.png... done!
+Converting page 68 to Space Launch_94-05_R_68.png... done!
+Converting page 69 to Space Launch_94-05_R_69.png... done!
+Converting page 70 to Space Launch_94-05_R_70.png... done!
+Converting page 71 to Space Launch_94-05_R_71.png... done!
+Converting page 72 to Space Launch_94-05_R_72.png... done!
+Converting page 73 to Space Launch_94-05_R_73.png... done!
+Converting page 74 to Space Launch_94-05_R_74.png... done!
+Converting page 75 to Space Launch_94-05_R_75.png... done!
+Converting page 76 to Space Launch_94-05_R_76.png... done!
+Converting page 77 to Space Launch_94-05_R_77.png... done!
+Converting page 78 to Space Launch_94-05_R_78.png... done!
+Converting page 79 to Space Launch_94-05_R_79.png... done!
+Converting page 80 to Space Launch_94-05_R_80.png... done!
+Converting page 81 to Space Launch_94-05_R_81.png... done!
+Converting page 82 to Space Launch_94-05_R_82.png... done!
+Converting page 83 to Space Launch_94-05_R_83.png... done!
+Converting page 84 to Space Launch_94-05_R_84.png... done!
+Converting page 85 to Space Launch_94-05_R_85.png... done!
+Converting page 86 to Space Launch_94-05_R_86.png... done!
+Converting page 87 to Space Launch_94-05_R_87.png... done!
+Converting page 88 to Space Launch_94-05_R_88.png... done!
+Converting page 89 to Space Launch_94-05_R_89.png... done!
+Converting page 90 to Space Launch_94-05_R_90.png... done!
+Converting page 91 to Space Launch_94-05_R_91.png... done!
+Converting page 92 to Space Launch_94-05_R_92.png... done!
+Converting page 93 to Space Launch_94-05_R_93.png... done!
+Converting page 94 to Space Launch_94-05_R_94.png... done!
+Converting page 95 to Space Launch_94-05_R_95.png... done!
+Converting page 96 to Space Launch_94-05_R_96.png... done!
+Converting page 97 to Space Launch_94-05_R_97.png... done!
+Converting page 98 to Space Launch_94-05_R_98.png... done!
+Converting page 99 to Space Launch_94-05_R_99.png... done!
+Converting page 100 to Space Launch_94-05_R_100.png... done!
+Converting page 101 to Space Launch_94-05_R_101.png... done!
+Converting page 102 to Space Launch_94-05_R_102.png... done!
+Converting page 103 to Space Launch_94-05_R_103.png... done!
+Converting page 104 to Space Launch_94-05_R_104.png... done!
+Converting page 105 to Space Launch_94-05_R_105.png... done!
+Converting page 106 to Space Launch_94-05_R_106.png... done!
+Converting page 107 to Space Launch_94-05_R_107.png... done!
+Converting page 108 to Space Launch_94-05_R_108.png... done!
+Converting page 109 to Space Launch_94-05_R_109.png... done!
+Converting page 110 to Space Launch_94-05_R_110.png... done!
+Converting page 111 to Space Launch_94-05_R_111.png... done!
+Converting page 112 to Space Launch_94-05_R_112.png... done!
+Converting page 113 to Space Launch_94-05_R_113.png... done!
+Converting page 114 to Space Launch_94-05_R_114.png... done!
+Converting page 115 to Space Launch_94-05_R_115.png... done!
+Converting page 116 to Space Launch_94-05_R_116.png... done!
+Converting page 117 to Space Launch_94-05_R_117.png... done!
+Converting page 118 to Space Launch_94-05_R_118.png... done!
+Converting page 119 to Space Launch_94-05_R_119.png... done!
+Converting page 120 to Space Launch_94-05_R_120.png... done!
+Converting page 121 to Space Launch_94-05_R_121.png... done!
+Converting page 122 to Space Launch_94-05_R_122.png... done!
+```
+
+```{r}
+text <- tesseract::ocr(pngfile)
+```
+
+```{asis}
+First use of Tesseract: copying language data...
+```
+
 
 ## Other Datasets
 
